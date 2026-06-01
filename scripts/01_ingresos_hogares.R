@@ -25,13 +25,9 @@ if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_202
 
 load(rdata_path_2025)
 
-# Agricultural income excluded from both years for comparability:
-# 2012 HH file has no agricultural expense variables (c02003097-c02006097),
-# so net agricultural income cannot be computed for 2012.
-# Excluding ag income from both is the only defensible comparable approach.
+# Use INEC's pre-computed ing_mon_cor directly — includes net agricultural income.
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
-  mutate(ing_mon_cor_no_ag = ing_mon_cor - coalesce(ing_ag_mon_neto, 0)) |>
-  select(fexp = Fexp, ing_mon_cor = ing_mon_cor_no_ag) |>
+  select(fexp = Fexp, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0)
 
 # ==============================================================================
@@ -48,14 +44,16 @@ data_path_2012 <- file.path(
 
 if (!file.exists(data_path_2012)) stop("Dataset 2012 not found: ", data_path_2012, call. = FALSE)
 
-# Mirror the INEC 2025 derivation using 2012 section numbering (14xx = 17xx, 17xx = 20xx):
-#   ing_asal_mon_net  = i1401097 (wages) + i1404xxx (annual bonuses) - i1701097 (deductions)
-#   ing_ind_mon_net   = i1406099 (cuenta propia) + i1407099 (socio)
-#   ing_ter_ocu       = a1443001 (other work income)
-#   tranf_cor         = sum(i1444001:i1444008)
-#   ing_ren_prop_cap  = sum(i1445001:i1445007)
-#   otro_ing_cor      = b1443001
-# Agricultural income from persons file omitted (no 2012 person-level file available here).
+# Reconstruct ing_mon_cor following INEC 2025 methodology (section 14xx = 17xx in 2025):
+#   ing_asal_mon_net = wages + annual bonuses − deductions
+#   ing_ind_mon_net  = net self-employment (non-ag: i1406099, socio: i1407099)
+#   ing_ag_mon       = gross agricultural sales (i1408097–i1436097, revenue only;
+#                      expense netting unavailable in 2012 HH file — limitation noted)
+#   ing_ter_ocu      = other work income (a1443001)
+#   tranf_cor        = transfers (i1444001–i1444008; 7 additional 2025 programmes
+#                      did not exist in 2012 — real policy difference, not artefact)
+#   ing_ren_prop_cap = capital/property income (i1445001–i1445007)
+#   otro_ing_cor     = other current income (b1443001)
 ingresos_2012 <- read_sav(data_path_2012) |>
   mutate(across(where(is.numeric), ~ ifelse(!is.na(.) & . < 0, 0, .))) |>
   mutate(
@@ -64,30 +62,25 @@ ingresos_2012 <- read_sav(data_path_2012) |>
         coalesce(i1701097, 0),
       0
     ),
-    ing_ind_mon_net  = pmax(
-      rowSums(cbind(i1406099, i1407099), na.rm = TRUE),
-      0
-    ),
-    # Agricultural monetary sales — same 8 variables as 2025 (i1708097 etc.), present in HH file
-    # Agricultural income excluded — no expense data in 2012 HH file to compute net
+    ing_ind_mon_net  = pmax(rowSums(cbind(i1406099, i1407099), na.rm = TRUE), 0),
+    ing_ag_mon       = rowSums(cbind(i1408097, i1409097, i1416097, i1421097,
+                                     i1424097, i1428097, i1431097, i1436097), na.rm = TRUE),
     ing_ter_ocu      = coalesce(a1443001, 0),
     tranf_cor        = rowSums(cbind(i1444001, i1444002, i1444003, i1444004,
                                      i1444005, i1444006, i1444007, i1444008), na.rm = TRUE),
     ing_ren_prop_cap = rowSums(cbind(i1445001, i1445002, i1445003,
                                      i1445004, i1445005, i1445006, i1445007), na.rm = TRUE),
     otro_ing_cor     = coalesce(b1443001, 0),
-    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ter_ocu +
-                       tranf_cor + ing_ren_prop_cap + otro_ing_cor
+    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ag_mon +
+                       ing_ter_ocu + tranf_cor + ing_ren_prop_cap + otro_ing_cor
   ) |>
   select(fexp = Fexp_cen2010, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0) |>
-  # Deflate to 2025 prices using INEC's official spliced IPC series (base 2014=100,
-  # ipc_ind_nac_reg_ciud_emp_clase_04_2026.xlsx, sheet "1. NACIONAL", row General).
-  # IPC_2012 = avg(Jan–Dec 2012) = 93.30  |  IPC_2025 = avg(Jan–Dec 2025) = 113.86
-  # Deflator = 113.86 / 93.30 = 1.2203  (22.0% cumulative, ~1.5%/yr)
-  # Note: 7 additional transfer programmes in 2025 (Pensión MMA, PAM, PTUV, PDD, etc.)
-  # did not exist in 2012 — that difference is real policy change, not a measurement artefact.
-  mutate(ing_mon_cor = ing_mon_cor * (113.8566 / 93.3027))
+  # Deflate to 2024-2025 survey prices using INEC official spliced IPC (base 2014=100).
+  # Survey periods: ENIGHUR 2011-2012 = Apr 2011–Mar 2012; ENIGHUR 2024-2025 = Dec 2024–Nov 2025.
+  # IPC_2012_survey = avg(abr-11:mar-12) = 90.00  |  IPC_2025_survey = avg(dic-24:nov-25) = 113.68
+  # Deflator = 113.68 / 90.00 = 1.2631
+  mutate(ing_mon_cor = ing_mon_cor * (113.6774 / 90.0032))
 
 # ==============================================================================
 # Shared helpers
@@ -213,11 +206,11 @@ overlay_plot <- combined |>
     y        = "Densidad (número de hogares)",
     caption  = paste0(
       "Fuente: Instituto Nacional de Estadística y Censos (INEC) — ENIGHUR 2011-2012 y 2024-2025; IPC nacional (base 2014=100).\n",
-      "Nota: Ingreso de 2012 deflactado a precios de 2025 usando el IPC empalmado INEC (factor: 1.220). ",
+      "Nota: Ingreso de 2012 deflactado a precios de la encuesta 2024-2025 usando el IPC empalmado INEC (factor: 1.263). ",
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ingreso agropecuario excluido de ambos años: en 2012 no se dispone de gastos agropecuarios para calcular el ingreso neto.",
+      "Ingreso agropecuario 2012 en términos brutos (sin deducir gastos, que no están disponibles en el archivo de hogares 2012).",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
