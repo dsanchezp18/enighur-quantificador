@@ -1,0 +1,54 @@
+---
+title: "Ingresos y Gastos de los Hogares Ecuatorianos"
+subtitle: "Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025"
+author: "Daniel Sánchez Pazmiño"
+date: today
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+# outline
+
+1. ingresos
+- ingreso, distribucion
+  - comparacion enighur antigua
+- ingreso, estructura
+- comparacion enemdu (oracion)
+- gini?, desigualdad.  
+2. gastos
+- gasto, distribucion por quintil y total
+  - - comparacion enighur antigua
+- gasto, estructura
+ - gasto en comida, en donde es mas caro
+ - gasto en vivienda, en donde es mas caro
+
+grafico principal: en que gastan los hogares ecuatorianos? 
+  - un sankey
+  - un treemap
+
+xq es importante?
+
+- cpi
+- inflacion
+- entre otros
+
+
+# Los hogares ecuatorianos aumentaron su mediana de ingresos en un [x] desde 2012 a 2025
+
+# La desigulad de ingresos (gini) se mantuvo...
+
+# Los hogares mas ricos gastan x% mas
+
+# Los hogares ecuatorianos gastan X% en comida, y x% en vivienda. 
+
+# [Region] la mas cara para comer
+
