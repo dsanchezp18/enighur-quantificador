@@ -25,9 +25,19 @@ if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_202
 
 load(rdata_path_2025)
 
-# ENIGHUR2025_HOGARES_AGREGADOS has ing_mon_cor pre-computed by INEC:
-# net wages + net self-employment + capital/property + transfers + other current income
+# ENIGHUR2025_HOGARES_AGREGADOS has ing_mon_cor with NET agricultural income.
+# To match 2012 (where agricultural expenses are unavailable), we add back gas_ag
+# at HH level so both years use GROSS agricultural revenues.
+gas_ag_hh <- ENIGHUR2025_PERSONAS_INGRESOS |>
+  group_by(Identif_hog) |>
+  summarise(gas_ag_hh = sum(as.numeric(gas_ag), na.rm = TRUE), .groups = "drop")
+
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
+  left_join(gas_ag_hh, by = "Identif_hog") |>
+  mutate(
+    gas_ag_hh   = coalesce(gas_ag_hh, 0),
+    ing_mon_cor = ing_mon_cor + gas_ag_hh   # restore to gross ag income
+  ) |>
   select(fexp = Fexp, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0)
 
@@ -178,7 +188,7 @@ overlay_plot <- combined |>
   annotate("text",
            x = med_2025, y = Inf,
            label = paste0("Mediana 2025\n$", formatC(round(med_2025), format = "d", big.mark = ",")),
-           hjust = -0.1, vjust = 1.4, size = 2.8, colour = "#1A3A5C") +
+           hjust = -0.1, vjust = 4.5, size = 2.8, colour = "#1A3A5C") +
   scale_colour_manual(
     name   = NULL,
     values = c(
@@ -215,7 +225,7 @@ overlay_plot <- combined |>
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ingreso agropecuario 2012 calculado desde las variables de venta agrícola y pecuaria del hogar (i1408097–i1436097).",
+      "Ambos años usan ingreso agropecuario bruto (ventas agrícolas y pecuarias sin deducir gastos) para garantizar comparabilidad.",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
