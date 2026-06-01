@@ -25,8 +25,19 @@ if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_202
 
 load(rdata_path_2025)
 
-# Use INEC's pre-computed ing_mon_cor directly — includes net agricultural income.
+# Convert 2025 agricultural income from net to gross for comparability with 2012.
+# ing_mon_cor uses ing_ag_mon_neto (revenues - gas_ag); adding gas_ag back gives gross revenues.
+# gas_ag = gastos en actividades agrícolas + forestales + pecuarias + pago a trabajadores ag.
+gas_ag_hh <- ENIGHUR2025_PERSONAS_INGRESOS |>
+  group_by(Identif_hog) |>
+  summarise(gas_ag_hh = sum(as.numeric(gas_ag), na.rm = TRUE), .groups = "drop")
+
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
+  left_join(gas_ag_hh, by = "Identif_hog") |>
+  mutate(
+    gas_ag_hh   = coalesce(gas_ag_hh, 0),
+    ing_mon_cor = ing_mon_cor + gas_ag_hh   # net → gross agricultural income
+  ) |>
   select(fexp = Fexp, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0)
 
@@ -210,7 +221,7 @@ overlay_plot <- combined |>
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ingreso agropecuario 2012 en términos brutos (sin deducir gastos, que no están disponibles en el archivo de hogares 2012).",
+      "Ingreso agropecuario en términos brutos en ambos años: 2025 ajustado sumando los gastos agropecuarios (gas_ag) al ing_mon_cor.",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
