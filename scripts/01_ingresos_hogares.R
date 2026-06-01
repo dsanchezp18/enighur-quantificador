@@ -25,19 +25,9 @@ if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_202
 
 load(rdata_path_2025)
 
-# Convert 2025 agricultural income from net to gross for comparability with 2012.
-# ing_mon_cor uses ing_ag_mon_neto (revenues - gas_ag); adding gas_ag back gives gross revenues.
-# gas_ag = gastos en actividades agrícolas + forestales + pecuarias + pago a trabajadores ag.
-gas_ag_hh <- ENIGHUR2025_PERSONAS_INGRESOS |>
-  group_by(Identif_hog) |>
-  summarise(gas_ag_hh = sum(as.numeric(gas_ag), na.rm = TRUE), .groups = "drop")
-
+# Use INEC's pre-computed ing_mon_cor directly (includes net agricultural income).
+# 2012 is now also computed with net agricultural income — both years comparable.
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
-  left_join(gas_ag_hh, by = "Identif_hog") |>
-  mutate(
-    gas_ag_hh   = coalesce(gas_ag_hh, 0),
-    ing_mon_cor = ing_mon_cor + gas_ag_hh   # net → gross agricultural income
-  ) |>
   select(fexp = Fexp, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0)
 
@@ -55,35 +45,56 @@ data_path_2012 <- file.path(
 
 if (!file.exists(data_path_2012)) stop("Dataset 2012 not found: ", data_path_2012, call. = FALSE)
 
-# Reconstruct ing_mon_cor following INEC 2025 methodology (section 14xx = 17xx in 2025):
-#   ing_asal_mon_net = wages + annual bonuses − deductions
-#   ing_ind_mon_net  = net self-employment (non-ag: i1406099, socio: i1407099)
-#   ing_ag_mon       = gross agricultural sales (i1408097–i1436097, revenue only;
-#                      expense netting unavailable in 2012 HH file — limitation noted)
-#   ing_ter_ocu      = other work income (a1443001)
-#   tranf_cor        = transfers (i1444001–i1444008; 7 additional 2025 programmes
-#                      did not exist in 2012 — real policy difference, not artefact)
-#   ing_ren_prop_cap = capital/property income (i1445001–i1445007)
-#   otro_ing_cor     = other current income (b1443001)
+# gas_ag for 2012: from GASTOS_HMO (c1703097-c1706097), exactly as INEC SPSS syntax.
+gastos_hmo_path <- file.path(
+  "data", "enighur", "2012",
+  "bbd_ingresos_gastos_2011-2012",
+  "2011-2012", "Ingresos_Gastos",
+  "02 BASE DE DATOS", "02 TABLAS DE TRABAJO",
+  "08 ENIGHUR11_GASTOS_HMO.sav"
+)
+gas_ag_2012 <- read_sav(gastos_hmo_path) |>
+  mutate(gas_ag = rowSums(cbind(c1703097, c1704097, c1705097, c1706097), na.rm = TRUE)) |>
+  select(Identif_hog, gas_ag)
+
+# Reconstruct ing_mon_cor following INEC 2012 SPSS syntax exactly.
+# Key differences from 2025: 18 wage items, 5 bonus items (no i1404004),
+# 7 transfer items (no i1444008), i1407099 only for self-employment (not i1406099),
+# i1709002 for independent deductions, 0→NA for capital income before summing.
 ingresos_2012 <- read_sav(data_path_2012) |>
+  left_join(gas_ag_2012, by = "Identif_hog") |>
   mutate(across(where(is.numeric), ~ ifelse(!is.na(.) & . < 0, 0, .))) |>
   mutate(
-    ing_asal_mon_net = pmax(
-      rowSums(cbind(i1401097, i1404001, i1404002, i1404003, i1404004, i1404005, i1404006), na.rm = TRUE) -
-        coalesce(i1701097, 0),
-      0
-    ),
-    ing_ind_mon_net  = pmax(rowSums(cbind(i1406099, i1407099), na.rm = TRUE), 0),
-    ing_ag_mon       = rowSums(cbind(i1408097, i1409097, i1416097, i1421097,
-                                     i1424097, i1428097, i1431097, i1436097), na.rm = TRUE),
-    ing_ter_ocu      = coalesce(a1443001, 0),
-    tranf_cor        = rowSums(cbind(i1444001, i1444002, i1444003, i1444004,
-                                     i1444005, i1444006, i1444007, i1444008), na.rm = TRUE),
-    ing_ren_prop_cap = rowSums(cbind(i1445001, i1445002, i1445003,
-                                     i1445004, i1445005, i1445006, i1445007), na.rm = TRUE),
-    otro_ing_cor     = coalesce(b1443001, 0),
-    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ag_mon +
-                       ing_ter_ocu + tranf_cor + ing_ren_prop_cap + otro_ing_cor
+    # Wages: 18 items (i1401001-i1401018)
+    suel_sal_bruto   = rowSums(cbind(i1401001,i1401002,i1401003,i1401004,i1401005,i1401006,
+                                     i1401007,i1401008,i1401009,i1401010,i1401011,i1401012,
+                                     i1401013,i1401014,i1401015,i1401016,i1401017,i1401018), na.rm=TRUE),
+    ded_asal         = rowSums(cbind(i1701001, i1701002), na.rm = TRUE),
+    # Bonuses: 5 items — i1404004 excluded per SPSS syntax
+    ing_otro_neto    = rowSums(cbind(i1404001,i1404002,i1404003,i1404005,i1404006), na.rm=TRUE),
+    ing_asal_mon_net = pmax(suel_sal_bruto - ded_asal + ing_otro_neto, 0),
+    # Non-ag self-employment: only i1407099 per SPSS syntax (not i1406099)
+    ing_cuent_prop_na = coalesce(as.numeric(i1407099), 0),
+    # Net agricultural income: gross revenues − gas_ag (exactly as SPSS syntax)
+    ag_rev           = rowSums(cbind(i1408097,i1409097,i1416097,i1421097,
+                                     i1424097,i1428097,i1431097,i1436097), na.rm=TRUE),
+    gas_ag           = coalesce(gas_ag, 0),
+    i1432097         = ifelse(ag_rev >= gas_ag, ag_rev, gas_ag),  # SPSS: if revenues<costs, cost floor
+    ing_ag_mon_neto  = i1432097 - gas_ag,
+    ded_ind          = coalesce(as.numeric(i1709002), 0),
+    ing_ind_mon_net  = pmax(ing_cuent_prop_na + ing_ag_mon_neto - ded_ind, 0),
+    ing_ter_ocu      = coalesce(as.numeric(a1443001), 0),
+    ing_trab_mon     = ing_asal_mon_net + ing_ind_mon_net + ing_ter_ocu,
+    # Capital income: recode 0→NA per SPSS syntax, then sum
+    ing_ren_prop     = rowSums(cbind(na_if(i1445004,0), na_if(i1445006,0), na_if(i1445007,0)), na.rm=TRUE),
+    ing_cap          = rowSums(cbind(na_if(i1445001,0), na_if(i1445002,0),
+                                     na_if(i1445003,0), na_if(i1445005,0)), na.rm=TRUE),
+    ing_ren_prop_cap = ing_ren_prop + ing_cap,
+    # Transfers: 7 items (i1444001-i1444007 per SPSS; i1444008 excluded)
+    tranf_cor        = rowSums(cbind(i1444001,i1444002,i1444003,i1444004,
+                                     i1444005,i1444006,i1444007), na.rm=TRUE),
+    otro_ing_cor     = coalesce(as.numeric(b1443001), 0),
+    ing_mon_cor      = ing_trab_mon + ing_ren_prop_cap + tranf_cor + otro_ing_cor
   ) |>
   select(fexp = Fexp_cen2010, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0) |>
@@ -221,7 +232,7 @@ overlay_plot <- combined |>
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ingreso agropecuario en términos brutos en ambos años: 2025 ajustado sumando los gastos agropecuarios (gas_ag) al ing_mon_cor.",
+      "Ingreso 2012 reconstruido siguiendo la sintaxis SPSS oficial INEC: neto de gastos agropecuarios (GASTOS_HMO), sin i1404004, sin i1444008.",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
