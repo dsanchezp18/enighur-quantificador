@@ -25,20 +25,13 @@ if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_202
 
 load(rdata_path_2025)
 
-# ENIGHUR2025_HOGARES_AGREGADOS has ing_mon_cor with NET agricultural income.
-# To match 2012 (where agricultural expenses are unavailable), we add back gas_ag
-# at HH level so both years use GROSS agricultural revenues.
-gas_ag_hh <- ENIGHUR2025_PERSONAS_INGRESOS |>
-  group_by(Identif_hog) |>
-  summarise(gas_ag_hh = sum(as.numeric(gas_ag), na.rm = TRUE), .groups = "drop")
-
+# Agricultural income excluded from both years for comparability:
+# 2012 HH file has no agricultural expense variables (c02003097-c02006097),
+# so net agricultural income cannot be computed for 2012.
+# Excluding ag income from both is the only defensible comparable approach.
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
-  left_join(gas_ag_hh, by = "Identif_hog") |>
-  mutate(
-    gas_ag_hh   = coalesce(gas_ag_hh, 0),
-    ing_mon_cor = ing_mon_cor + gas_ag_hh   # restore to gross ag income
-  ) |>
-  select(fexp = Fexp, ing_mon_cor) |>
+  mutate(ing_mon_cor_no_ag = ing_mon_cor - coalesce(ing_ag_mon_neto, 0)) |>
+  select(fexp = Fexp, ing_mon_cor = ing_mon_cor_no_ag) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0)
 
 # ==============================================================================
@@ -76,15 +69,14 @@ ingresos_2012 <- read_sav(data_path_2012) |>
       0
     ),
     # Agricultural monetary sales — same 8 variables as 2025 (i1708097 etc.), present in HH file
-    ing_ag_mon       = rowSums(cbind(i1408097, i1409097, i1416097, i1421097,
-                                     i1424097, i1428097, i1431097, i1436097), na.rm = TRUE),
+    # Agricultural income excluded — no expense data in 2012 HH file to compute net
     ing_ter_ocu      = coalesce(a1443001, 0),
     tranf_cor        = rowSums(cbind(i1444001, i1444002, i1444003, i1444004,
                                      i1444005, i1444006, i1444007, i1444008), na.rm = TRUE),
     ing_ren_prop_cap = rowSums(cbind(i1445001, i1445002, i1445003,
                                      i1445004, i1445005, i1445006, i1445007), na.rm = TRUE),
     otro_ing_cor     = coalesce(b1443001, 0),
-    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ag_mon + ing_ter_ocu +
+    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ter_ocu +
                        tranf_cor + ing_ren_prop_cap + otro_ing_cor
   ) |>
   select(fexp = Fexp_cen2010, ing_mon_cor) |>
@@ -225,7 +217,7 @@ overlay_plot <- combined |>
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ambos años usan ingreso agropecuario bruto (ventas agrícolas y pecuarias sin deducir gastos) para garantizar comparabilidad.",
+      "Ingreso agropecuario excluido de ambos años: en 2012 no se dispone de gastos agropecuarios para calcular el ingreso neto.",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
