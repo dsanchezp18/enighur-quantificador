@@ -65,24 +65,27 @@ ingresos_2012 <- read_sav(data_path_2012) |>
       rowSums(cbind(i1406099, i1407099), na.rm = TRUE),
       0
     ),
+    # Agricultural monetary sales — same 8 variables as 2025 (i1708097 etc.), present in HH file
+    ing_ag_mon       = rowSums(cbind(i1408097, i1409097, i1416097, i1421097,
+                                     i1424097, i1428097, i1431097, i1436097), na.rm = TRUE),
     ing_ter_ocu      = coalesce(a1443001, 0),
     tranf_cor        = rowSums(cbind(i1444001, i1444002, i1444003, i1444004,
-                                    i1444005, i1444006, i1444007, i1444008), na.rm = TRUE),
+                                     i1444005, i1444006, i1444007, i1444008), na.rm = TRUE),
     ing_ren_prop_cap = rowSums(cbind(i1445001, i1445002, i1445003,
-                                    i1445004, i1445005, i1445006, i1445007), na.rm = TRUE),
+                                     i1445004, i1445005, i1445006, i1445007), na.rm = TRUE),
     otro_ing_cor     = coalesce(b1443001, 0),
-    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ter_ocu +
+    ing_mon_cor      = ing_asal_mon_net + ing_ind_mon_net + ing_ag_mon + ing_ter_ocu +
                        tranf_cor + ing_ren_prop_cap + otro_ing_cor
   ) |>
   select(fexp = Fexp_cen2010, ing_mon_cor) |>
   filter(!is.na(ing_mon_cor), ing_mon_cor > 0) |>
-  # Deflate to 2025 prices using linked IPC series (INEC, base 2014=100).
-  # Step 1 — historical series has base 2004=100; Dec 2014 is the link month.
-  #   IPC_2012_base2014 = avg(2012 monthly, base 2004=100) / Dec2014(base 2004=100) × 100
-  #                     = 139.79 / 150.79 × 100 = 92.71
-  # Step 2 — current series (base Dec 2014=100): IPC_2025 = avg(Jan-Dec 2025) = 113.86
-  # Deflator = 113.86 / 92.71 = 1.2282  (22.8% cumulative, ~1.6%/yr — consistent with dollarisation)
-  mutate(ing_mon_cor = ing_mon_cor * (113.86 / 92.71))
+  # Deflate to 2025 prices using INEC's official spliced IPC series (base 2014=100,
+  # ipc_ind_nac_reg_ciud_emp_clase_04_2026.xlsx, sheet "1. NACIONAL", row General).
+  # IPC_2012 = avg(Jan–Dec 2012) = 93.30  |  IPC_2025 = avg(Jan–Dec 2025) = 113.86
+  # Deflator = 113.86 / 93.30 = 1.2203  (22.0% cumulative, ~1.5%/yr)
+  # Note: 7 additional transfer programmes in 2025 (Pensión MMA, PAM, PTUV, PDD, etc.)
+  # did not exist in 2012 — that difference is real policy change, not a measurement artefact.
+  mutate(ing_mon_cor = ing_mon_cor * (113.8566 / 93.3027))
 
 # ==============================================================================
 # Shared helpers
@@ -170,12 +173,12 @@ overlay_plot <- combined |>
   ) +
   annotate("text",
            x = med_2012, y = Inf,
-           label = paste0("$", formatC(round(med_2012), format = "d", big.mark = ",")),
-           hjust = 1.15, vjust = 1.8, size = 2.5, colour = "#A8400A") +
+           label = paste0("Mediana 2012\n$", formatC(round(med_2012), format = "d", big.mark = ",")),
+           hjust = 1.1, vjust = 1.4, size = 2.8, colour = "#A8400A") +
   annotate("text",
            x = med_2025, y = Inf,
-           label = paste0("$", formatC(round(med_2025), format = "d", big.mark = ",")),
-           hjust = -0.15, vjust = 1.8, size = 2.5, colour = "#1A3A5C") +
+           label = paste0("Mediana 2025\n$", formatC(round(med_2025), format = "d", big.mark = ",")),
+           hjust = -0.1, vjust = 1.4, size = 2.8, colour = "#1A3A5C") +
   scale_colour_manual(
     name   = NULL,
     values = c(
@@ -208,11 +211,11 @@ overlay_plot <- combined |>
     y        = "Densidad (número de hogares)",
     caption  = paste0(
       "Fuente: Instituto Nacional de Estadística y Censos (INEC) — ENIGHUR 2011-2012 y 2024-2025; IPC nacional (base 2014=100).\n",
-      "Nota: Ingreso de 2012 deflactado a precios de 2025 usando el IPC (factor: 1.228). ",
+      "Nota: Ingreso de 2012 deflactado a precios de 2025 usando el IPC empalmado INEC (factor: 1.220). ",
       "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
       "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
       " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Los ingresos agropecuarios de la base de personas 2012 no están incluidos.",
+      "Ingreso agropecuario 2012 calculado desde las variables de venta agrícola y pecuaria del hogar (i1408097–i1436097).",
       " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
     )
   ) +
