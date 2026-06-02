@@ -26,7 +26,7 @@
 
 ## Project Layout
 
-- `scripts/01_ingresos_hogares.R`: main analysis script that loads raw ENIGHUR data and writes figures.
+- `scripts/01_ingresos_hogares.R`: main analysis script that loads the slim 2012 inputs and 2025 working `.RData`, then writes figures.
 - `scripts/utils.R`: shared plotting helpers.
 - `scripts/packages.R`: package loading checks.
 - `scripts/check.R`: cheap verification entrypoint that does not load the large datasets.

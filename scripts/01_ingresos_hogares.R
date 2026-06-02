@@ -36,22 +36,16 @@ ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
 # ==============================================================================
 
 data_path_2012 <- file.path(
-  "data", "enighur", "2012",
-  "bbd_ingresos_gastos_2011-2012",
-  "2011-2012", "Ingresos_Gastos",
-  "02 BASE DE DATOS", "02 TABLAS DE TRABAJO",
-  "04 ENIGHUR11_INGRESOS_H.sav"
+  "data", "enighur", "2012", "required",
+  "ENIGHUR11_INGRESOS_H.sav"
 )
 
 if (!file.exists(data_path_2012)) stop("Dataset 2012 not found: ", data_path_2012, call. = FALSE)
 
 # gas_ag for 2012: from GASTOS_HMO (c1703097-c1706097), exactly as INEC SPSS syntax.
 gastos_hmo_path <- file.path(
-  "data", "enighur", "2012",
-  "bbd_ingresos_gastos_2011-2012",
-  "2011-2012", "Ingresos_Gastos",
-  "02 BASE DE DATOS", "02 TABLAS DE TRABAJO",
-  "08 ENIGHUR11_GASTOS_HMO.sav"
+  "data", "enighur", "2012", "required",
+  "ENIGHUR11_GASTOS_HMO.sav"
 )
 gas_ag_2012 <- read_sav(gastos_hmo_path) |>
   mutate(gas_ag = rowSums(cbind(c1703097, c1704097, c1705097, c1706097), na.rm = TRUE)) |>
