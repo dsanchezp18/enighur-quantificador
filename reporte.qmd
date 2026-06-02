@@ -44,13 +44,20 @@ xq es importante?
 - enfoque en gastos en licor. 
 
 
-# Los hogares ecuatorianos aumentaron su mediana de ingresos en un [x] desde 2012 a 2025
+# La distribución del ingreso de los hogares es prácticamente la misma que hace 12 años, sugiriendo que la desigualdad no ha mejorado
 
-# La desigulad de ingresos (gini) se mantuvo...
+- comparar distribucion
+- nota sobre el cpi
+- gini y otros indicadores de desigualdad
+
+# regional: region x tiene el mejor ingreso, y tiene el peor
+
+# la distribucion del gasto... 
 
 # Los hogares mas ricos gastan x% mas
 
 # Los hogares ecuatorianos gastan X% en comida, y x% en vivienda. 
 
-# [Region] la mas cara para comer
+# [provincia] la mas cara para comer es la siguiente
+
 
