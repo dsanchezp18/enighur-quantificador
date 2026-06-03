@@ -39,7 +39,7 @@ Uno de estos productos es la *Encuesta Nacional de Ingresos y Gastos de los Hoga
 
 La ENIGHUR es especialmente importante porque es la única encuesta que detalla el gasto de los hogares de forma desagregada. Una de las estadísticas más importantes, la tasa de inflación mensual, depende de entender cómo gastan las personas su dinero; es decir, qué porcentaje de sus gastos está dedicado a cada uno de los componentes de la tasa de inflación. Sin estos valores, llamados "pesos", es imposible calcular una tasa de inflación representativa para el consumidor promedio, es decir, la mayoría de ecuatorianos. La última ENIGHUR se realizó hace más de una década (2011-2012), y en este tiempo el comportamiento de los hogares probablemente ha cambiado. Sin los pesos que describo, la inflación en todos estos años, particularmente en los últimos, está probablemente mal calculada. 
 
-En su extremo detalle, la ENIGHUR también nos permite entender tópicos especializados que han surgido en los últimos años. ¿Qué alimentos son los que más le cuestan al ecuatoriano? ¿Las familias de la Sierra consumen distinto que las de la Costa? ¿Qué provincias gastan más en alcohol y estupefacientes? ¿Qué tanto gastan los hogares en salud? Y mucho más. 
+En su extremo detalle, la ENIGHUR también nos permite entender tópicos especializados que han surgido en los últimos años. ¿Qué alimentos son los preferidos por el ecuatoriano? ¿Las familias de la Sierra consumen distinto que las de la Costa? ¿Qué provincias gastan más en alcohol y estupefacientes? ¿Qué tanto gastan los hogares en salud? Y mucho más. 
 
 A continuación, reviso, de forma algo superficial, los patrones más interesantes de la ENIGHUR. 
 
@@ -49,18 +49,22 @@ La encuesta nos informa que, durante 2025^[El periodo de recolección de datos d
 
 El gráfico de abajo muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo": alimentos, vivienda, entre otros^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias ("regalos" monetarios) a otros hogares o instituciones.
 
-El componente que más les pesa a las familias es el gasto en alimentos y restaurantes: $202 en promedio, representando el 22.8% del ingreso y el 32% del gasto de consumo total. De acuerdo con la teoría económica (ley de Engel) y la investigación empírica, este alto porcentaje es muy común en países en vías de desarrollo. Como comparación, los hogares canadienses dedicaron el 15.7% de sus gastos a comida.
+El componente que más les pesa a las familias es el gasto en alimentos y restaurantes: $202 en promedio, representando el 22.8% del ingreso y el 32% del gasto de consumo total. De acuerdo con la teoría económica (ley de Engel) y la investigación empírica, este alto porcentaje es muy común en países en vías de desarrollo. Como comparación, [los hogares canadienses](https://www150.statcan.gc.ca/n1/daily-quotidien/250521/dq250521a-eng.htm) dedicaron el 15.7% de sus gastos a comida.
 
-La vivienda y servicios representa un 7.8%, seguida de muebles y vestimenta. Estos valores, especialmente en dólares, pueden parecer relativamente bajos. Es importante recordar que estos valores promedian hogares rurales y urbanos, por lo que pueden parecer algo bajos, ya que los valores pequeños de los hogares rurales traen el promedio hacia abajo.
+La vivienda y servicios representa un 7.8%, seguida de muebles y vestimenta. Estos valores, especialmente en dólares, pueden parecer relativamente bajos. Es importante recordar que estos valores promedian hogares rurales y urbanos, por lo que pueden parecer algo bajos, ya que los valores pequeños de los hogares rurales traen el promedio hacia abajo. 
+
+Los hogares no han cambiado mucho la forma en la que gastan (en terminso proporcionales). El componenet que mas ha cambiado es el de la Vivienda y servicios, que representa en 2025 una mayor importancia dentro del presupuesto del hogar (10.9% vs. 7.4% en 2012).
 
 Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingresos y gastos es de $205, representando el 23.1% del ingreso. Cabe recalcar que la ENIGHUR no pregunta directamente sobre el ahorro; esta es una variable calculada por mí, restando los agregados y dividiendo para el número de hogares que la encuesta representa. Esta es una práctica común para el análisis de *proporciones*. Para entender mejor las tendencias de los valores en dólares, es mejor utilizar percentiles, lo que haremos más abajo. 
 
+<div style="width: 100%; max-width: 100%; margin: 1.5rem 0;">
 <iframe
   src="../output/figures/sankey_ingresos_gastos_interactivo.html"
-  width="100%"
-  height="900"
-  style="border: 0;"
+  style="display: block; width: 100%; height: 980px; border: 0;"
+  loading="lazy"
 ></iframe>
+</div>
+
 
 # La distribución del ingreso en 2025 es esencialmente la misma que en 2012
 
@@ -68,7 +72,32 @@ En la anterior sección, utilizo el ingreso promedio, y no la mediana u otros pe
 
 La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor, y el otro 50% gana más. Esto es solo unos pocos dólares más alto que la mediana del ingreso en 2012 ($614)^[Valor ajustado por inflación de 2012 a 2025], la última vez que se realizó la ENIGHUR. Generalmente, se espera que la economía progrese en esa cantidad de tiempo, pero desafortunadamente los datos muestran una sociedad estancada en ese nivel de ingreso. El gráfico de abajo detalla mejor la distribución del ingreso de los hogares en ambos años. 
 
-![](distribucion_ingreso_2012_2025)
+![](../output/figures/distribucion_ingreso_2012_2025.png)
+
+Se hablo mucho en semanas pasadas de cuantos hogares ganan $1.500 dolares o mas. La ENIGHUR confirma, de manera fulminante, resultados ENEMDU: solo 14.1% de familias gana $1,500 o mas. El 90% de familias gana solo hasta $1.826. El 1%, representando a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o mas. 
+
+En terminos de desigualdad, es decir, que tanto porcentaje de ingresos se llevan los diferentes grupos de la sociedad, el Ecuador tiene una puntuacion de 0.452 (coeficiente de Gini). En 12 anios, el valor ha mejorado marginalmente (0.466). UEste valor es de los mas altos de Latinoamerica, superado solo por Nicaragua, Brazil, Panama y COLOMBIA, SEGUN el banco mundial [aqui](https://data.worldbank.org/indicator/SI.POV.GINI?locations=C6&most_recent_value_desc=true). 
 
 # Los hogares rurales ganan y gastan considerablemente menos
 
+Los hogares urbanos
+
+Un detalle a notar es que el ingreso por agricultura toma muchisima mas importancia en los hogares rurales, representando, en promedio, el 10.7% de los ingresos rurales. En la zona urbana, el mismo no llega al 1%. 
+
+# Los hogares mas ricos... 
+
+# La provincia mas cara para vivir es xxxx
+
+# Las familias de xxxx gastan mas en estupefacientes
+
+# El gasto en salud...
+
+edad vs. gto salud scatterplot. 
+
+# La ciudad... 
+
+# gasolina
+
+# la costa come x, la sierra come y. 
+
+# el ahorro

@@ -247,13 +247,10 @@ overlay_plot <- combined |>
     x        = "Ingreso monetario corriente del hogar (USD mensuales)",
     y        = "Densidad (número de hogares)",
     caption  = paste0(
-      "Fuente: Instituto Nacional de Estadística y Censos (INEC) — ENIGHUR 2011-2012 y 2024-2025; IPC nacional (base 2014=100).\n",
-      "Nota: Ingreso de 2012 deflactado a precios de la encuesta 2024-2025 usando el IPC empalmado INEC (factor: 1.263). ",
-      "Se muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
-      "El ingreso monetario corriente incluye remuneraciones netas, trabajo independiente,",
-      " rentas de capital, transferencias y otros ingresos corrientes.\n",
-      "Ingreso 2012 reconstruido siguiendo la sintaxis SPSS oficial INEC: neto de gastos agropecuarios (GASTOS_HMO), sin i1404004, sin i1444008.",
-      " Cifras ponderadas con el factor de expansión del hogar (Fexp)."
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), INEC; IPC nacional (base 2014=100).\n",
+      "Nota: El ingreso de 2012 fue ajustado a precios de 2024-2025 para compararlo con la encuesta más reciente. ",
+      "El gráfico muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
+      "El ingreso considerado reúne las principales fuentes monetarias del hogar, y las cifras están ponderadas para representar al total de hogares del país."
     )
   ) +
   theme_quantificador_legend() +
@@ -296,7 +293,7 @@ log_plot <- combined |>
     subtitle = "Escala logarítmica — distribución completa sin corte",
     x        = "Ingreso monetario corriente del hogar (USD mensuales, escala log)",
     y        = "Densidad (número de hogares)",
-    caption  = "Fuente: INEC — ENIGHUR 2011-2012 y 2024-2025."
+    caption  = "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), INEC."
   ) +
   theme_quantificador_legend()
 
