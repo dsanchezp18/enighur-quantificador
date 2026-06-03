@@ -13,15 +13,29 @@ pdf(NULL)   # suppress the default Rplots.pdf that R opens when no device is act
 # 2025
 # ==============================================================================
 
-rdata_path_2025 <- file.path(
-  "data", "enighur", "2025",
-  "Enighur_Bases_de_datos_R",
-  "Bases de trabajo",
-  "Bases_trabajo_R",
-  "Bases_trabajo.RData"
-)
+resolve_existing_path <- function(candidates, label) {
+  hits <- candidates[file.exists(candidates)]
+  if (length(hits) > 0) {
+    return(hits[[1]])
+  }
 
-if (!file.exists(rdata_path_2025)) stop("RData 2025 not found: ", rdata_path_2025, call. = FALSE)
+  stop(
+    label, " not found. Checked:\n- ",
+    paste(candidates, collapse = "\n- "),
+    call. = FALSE
+  )
+}
+
+rdata_path_2025 <- resolve_existing_path(
+  file.path(
+    "data", "enighur", "2025",
+    "Enighur_Bases_de_datos_R",
+    "Bases de trabajo",
+    "Bases_trabajo_R",
+    "Bases_trabajo.RData"
+  ),
+  "RData 2025"
+)
 
 load(rdata_path_2025)
 
@@ -35,17 +49,29 @@ ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
 # 2012
 # ==============================================================================
 
-data_path_2012 <- file.path(
-  "data", "enighur", "2012", "required",
-  "ENIGHUR11_INGRESOS_H.sav"
+data_path_2012 <- resolve_existing_path(
+  c(
+    file.path("data", "enighur", "2012", "required", "ENIGHUR11_INGRESOS_H.sav"),
+    file.path(
+      "data", "enighur", "2012",
+      "bbd_ingresos_gastos_2011-2012", "2011-2012", "Ingresos_Gastos",
+      "02 BASE DE DATOS", "02 TABLAS DE TRABAJO", "04 ENIGHUR11_INGRESOS_H.sav"
+    )
+  ),
+  "Dataset 2012"
 )
 
-if (!file.exists(data_path_2012)) stop("Dataset 2012 not found: ", data_path_2012, call. = FALSE)
-
 # gas_ag for 2012: from GASTOS_HMO (c1703097-c1706097), exactly as INEC SPSS syntax.
-gastos_hmo_path <- file.path(
-  "data", "enighur", "2012", "required",
-  "ENIGHUR11_GASTOS_HMO.sav"
+gastos_hmo_path <- resolve_existing_path(
+  c(
+    file.path("data", "enighur", "2012", "required", "ENIGHUR11_GASTOS_HMO.sav"),
+    file.path(
+      "data", "enighur", "2012",
+      "bbd_ingresos_gastos_2011-2012", "2011-2012", "Ingresos_Gastos",
+      "02 BASE DE DATOS", "02 TABLAS DE TRABAJO", "08 ENIGHUR11_GASTOS_HMO.sav"
+    )
+  ),
+  "Dataset 2012 GASTOS_HMO"
 )
 gas_ag_2012 <- read_sav(gastos_hmo_path) |>
   mutate(gas_ag = rowSums(cbind(c1703097, c1704097, c1705097, c1706097), na.rm = TRUE)) |>
