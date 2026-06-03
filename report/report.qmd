@@ -28,4 +28,32 @@ header-includes:
     - \setkomafont{date}{\normalsize}
 ---
 
-Las agencias estadisticas de un pais reportan informacion crucial para 
+*En esta entrega del Quantificador, Daniel Sánchez analiza los recientes datos de la Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), recientemente realizada por el INEC en 2024-2025. Se revisan patrones de ingreso y gasto para los hogares, con información que no se recolectaba desde 2011-2012*.
+
+# ¿De qué sirven las encuestas de ingreso y gasto?
+
+Las agencias estadísticas de un país reportan información crucial sobre su sociedad y economía, para así motivar la mejor creación de política pública y apoyar la toma de decisiones de en todos los sectores de la sociedad. En Ecuador, dicha agencia es el Instituto Nacional de Estadística y Censos (INEC), quien tiene el mandato de llevar a cabo el censo decenal, así como varias encuestas y recolección de datos administrativos. 
+
+Uno de estos productos es la *Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales* (ENIGHUR). Esta encuesta es la fuente principal para comprender los patrones de ingreso y gasto del Ecuador. Se preguntarán: ¿de qué sirve esta encuesta, si se cuenta con la encuesta de empleo, que ya nos da ingresos del hogar? Bueno, la ENIGHUR es extremadamente detallada en las cantidades y fuentes de ingreso de los ecuatorianos, dándonos información  desagregada de dónde ganan dinero los ecuatorianos, más que un agregados amplios. Esto permite entender la distribución del dinero en la sociedad de una mejor manera. El ingreso es una importante variable para varios programas públicos, puesto que solo ciertas personas que ganan poco dinero suelen ser elegibles. Por otro lado, comprender la estratificación socioeconómica es también importante para empresas, al momento de poner precios, por ejemplo.
+
+La ENIGHUR es especialmente importante por que es la unica encuesta que detalla el gasto de los hogares de forma desagregada. Una de las estadísticas más importantes, la tasa de inflación mensual, depende de entender cómo gastan las personas su dinero; es decir, qué tanto porcentaje de sus gastos está dedicado a cada uno de los componentes de la tasa de inflacion. Sin estos valores, llamados "pesos", es imposible calcular una tasa de inflación representativa para el consumidor promedio (la mayoría de ecuatorianos). La última ENIGHUR se realizó hace más de una década (2011-2012), y en este tiempo, el comportamiento de los hogares probablemente ha cambiado. Sin los pesos que describo, la inflación en todos estos años, particularmente los últimos, está probablemente mal calculada. 
+
+En su extremo detalle, la ENIGHUR tambien nos permite entender tópicos de especialidad que han surgido en los últimos años. ¿Qué alimentos son los que más le cuestan al ecuatoriano? ¿Las familias de la Sierra consumen diferente que la Costa? ¿Que provincias gastan mas en alcohol y estupefacientes? ¿Que tanto gastan los hogares en salud? Y mucho más. 
+
+A continuación, reviso, de forma algo superficial, los patrones más interesantes de la ENIGHUR. 
+
+# El hogar ecuatoriano promedio gana $889 y gasta el 77% de ese ingreso
+
+La encuesta nos informa que, durante 2025^[El periodo de recoleccion de datos de la encuesta fue de Diciembre 2024 a Noviembre 2025.], el promedio del ingreso **monetario** de los hogares fue de $889^[INEC reporta un ingreso mas alto con la misma encuesta, puesto que se consideran ingresos no monetarios mediante estimaciones del valor de dichos ingresos en especie]. Este valor es algo mas optimista que el que se determina mediante la ENEMDU para el mismo periodo. Las diferencias probablemente se deben a variaciones aleatorias, diferencias en las preguntas, entre otras razones. Dado que la ENIGHUR es una encuesta especializada, el valor de $889 es probablemente una mejor estimacion que la de $701 de la ENEMDU. 
+
+El grafico abajo muestra como el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. 
+
+Mediante la difer
+
+# La distribucion del ingreso en 2025 es esencialmente la misma que en 2012
+
+En la anterior seccion, utilizo el ingreso promedio, y no la mediana u otros percentiles para poder reconciliar bien ingresos con gastos, sin embargo, es siempre mas informatiov observar percentiles para entender mejor la distribucion del ingreso, es decir, la "organizacion" de los ingresos de los hogares en el pais. 
+
+La mediana del ingreso segun ENIGHUR fue de $620, lo que quiere decir que un 50% de hogares gana hasta ese valor, y el otro 50% gana mas. Esto es solo unos pocos dolares mas alto que la mediana del ingreso en 2012 ($614)^[Valor ajustado por inflacion de 2012 a 2025], la ultima vez que se realizo la ENIGHUR. Generalmente, se espera que la economia progrese en dicha cantidad de tiempo, pero desafortunademente, los datos muestran una sociedad estancada en ese nivel de ingreso. El grafico abajo detalla mejor la distribucion de ingreso de los hogares en ambos anios. 
+
+![](distribucion_ingreso_2012_2025)
