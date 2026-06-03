@@ -363,4 +363,12 @@ plot <- ggplot2::ggplot() +
     plot.caption = ggplot2::element_text(hjust = 0)
   )
 
+save_figure(
+  "sankey_ingresos_gastos.png",
+  plot = plot,
+  width = 14,
+  height = 8,
+  dpi = 300
+)
+
 print(plot)

@@ -1,0 +1,14 @@
+codigo_enighur,nombre_enighur,categoria_codigo,categoria_nombre,shs_equivalente,orden,color_hex
+d1,Alimentos y bebidas no alcohólicas,alimentacion,Alimentos y restaurantes,Food,1,#4E9A51
+d11,Servicios de restaurantes y alojamientos,alimentacion,Alimentos y restaurantes,Food,1,#4E9A51
+d4,Vivienda agua electricidad gas y otros combustibles,vivienda,Vivienda y servicios,Shelter,2,#3A7EBF
+d5,Muebles artículos para el hogar y conservación,hogar,Muebles y hogar,Household operations & furnishings,3,#7B5EA7
+d3,Prendas de vestir y calzado,vestimenta,Vestimenta,Clothing & footwear,4,#D4702A
+d7,Transporte,transporte,Transporte,Transportation,5,#C94040
+d6,Salud,salud,Salud,Health care,6,#E8A838
+d9,Recreación deporte y cultura,recreacion_educacion,Recreación y educación,Recreation & education,7,#5BA3A0
+d10,Servicios Educativos,recreacion_educacion,Recreación y educación,Recreation & education,7,#5BA3A0
+d2,Bebidas alcohólicas tabaco y estupefacientes,otros,Otros,Miscellaneous,8,#8C8C8C
+d8,Información y comunicación,otros,Otros,Miscellaneous,8,#8C8C8C
+d12,Seguros y servicios financieros,otros,Otros,Miscellaneous,8,#8C8C8C
+d13,Cuidado personal previsión social y bienes diversos,otros,Otros,Miscellaneous,8,#8C8C8C
