@@ -1,7 +1,7 @@
 source("scripts/packages.R")
 source("scripts/utils.R")
 
-ensure_packages(c("readxl", "readr", "dplyr", "ggplot2", "scales"))
+ensure_packages(c("readxl", "readr", "dplyr", "ggplot2", "scales", "plotly", "htmlwidgets"))
 
 options(scipen = 999)
 
@@ -37,6 +37,7 @@ normalize_label <- function(x) {
 
 fmt_usd <- function(x) scales::dollar(round(x), prefix = "$", big.mark = ",", accuracy = 1)
 fmt_pct <- function(x) paste0(sprintf("%.1f", 100 * x), "%")
+with_alpha <- function(colour, alpha = 1) grDevices::adjustcolor(colour, alpha.f = alpha)
 
 read_total_rows <- function(sheet_name) {
   sheet <- readxl::read_excel(tab_path, sheet = sheet_name, col_names = FALSE, .name_repair = "minimal")
@@ -214,23 +215,47 @@ if (abs(sum(category_rows$valor_avg) - avg_gas_corr) > 1e-6) {
   stop("Gasto corriente categories do not sum to total gasto corriente.", call. = FALSE)
 }
 
+message(
+  "Alimentos y restaurantes = ",
+  paste(
+    gasto_map$nombre_enighur[gasto_map$categoria_codigo == "alimentacion"],
+    collapse = " + "
+  )
+)
+
 mid_labels <- c("Gasto corriente", "Gasto de no consumo", "Ahorro")
 mid_values <- c(avg_gas_corr, avg_gas_no_con, avg_ahorro)
 
+mid_gap <- avg_ing_mon_cor * 0.012
+right_gap <- avg_ing_mon_cor * 0.004
+
 plot_height <- max(
   avg_ing_mon_cor,
-  sum(mid_values) + avg_ing_mon_cor * 0.06,
-  sum(category_rows$valor_avg) + avg_ing_mon_cor * 0.03 * (nrow(category_rows) - 1)
-)
+  sum(mid_values) + mid_gap * (length(mid_values) - 1),
+  sum(category_rows$valor_avg) + right_gap * (nrow(category_rows) - 1)
+) * 1.01
 
 root_stage <- stack_stage("Ingreso monetario", avg_ing_mon_cor, gap = 0, total_height = plot_height, node_type = "root")
-mid_stage <- stack_stage(mid_labels, mid_values, gap = avg_ing_mon_cor * 0.03, total_height = plot_height, node_type = "mid")
-right_stage <- stack_stage(category_rows$label, category_rows$valor_avg, gap = avg_ing_mon_cor * 0.01, total_height = plot_height, node_type = "right")
+mid_stage <- stack_stage(mid_labels, mid_values, gap = mid_gap, total_height = plot_height, node_type = "mid")
+right_stage <- stack_stage(category_rows$label, category_rows$valor_avg, gap = right_gap, total_height = plot_height, node_type = "right")
 
 root_allocations <- allocate_within(root_stage$ymin[[1]], root_stage$ymax[[1]], mid_values)
 mid_targets <- lapply(seq_len(nrow(mid_stage)), function(i) list(ymin = mid_stage$ymin[[i]], ymax = mid_stage$ymax[[i]]))
 right_targets <- lapply(seq_len(nrow(right_stage)), function(i) list(ymin = right_stage$ymin[[i]], ymax = right_stage$ymax[[i]]))
 gasto_corr_allocations <- allocate_within(mid_stage$ymin[[1]], mid_stage$ymax[[1]], category_rows$valor_avg)
+
+root_xmin <- -0.18
+root_xmax <- 0.18
+mid_xmin <- 1.24
+mid_xmax <- 1.54
+right_xmin <- 2.62
+right_xmax <- 2.92
+mid_label_x <- (mid_xmin + mid_xmax) / 2
+right_label_x <- 3.00
+root_flow_x0 <- root_xmax
+root_flow_x1 <- mid_xmin
+cat_flow_x0 <- mid_xmax
+cat_flow_x1 <- right_xmin
 
 mid_palette <- c(
   "Gasto corriente" = "#2D6A9F",
@@ -245,8 +270,8 @@ category_palette <- c(
 
 root_flows <- dplyr::bind_rows(lapply(seq_along(root_allocations), function(i) {
   make_flow_polygon(
-    x0 = 0.12,
-    x1 = 0.88,
+    x0 = root_flow_x0,
+    x1 = root_flow_x1,
     from_range = root_allocations[[i]],
     to_range = mid_targets[[i]],
     fill = unname(mid_palette[[mid_labels[[i]]]]),
@@ -256,8 +281,8 @@ root_flows <- dplyr::bind_rows(lapply(seq_along(root_allocations), function(i) {
 
 category_flows <- dplyr::bind_rows(lapply(seq_len(nrow(category_rows)), function(i) {
   make_flow_polygon(
-    x0 = 1.12,
-    x1 = 1.88,
+    x0 = cat_flow_x0,
+    x1 = cat_flow_x1,
     from_range = gasto_corr_allocations[[i]],
     to_range = right_targets[[i]],
     fill = category_palette[[i]],
@@ -267,17 +292,17 @@ category_flows <- dplyr::bind_rows(lapply(seq_len(nrow(category_rows)), function
 }))
 
 node_rects <- dplyr::bind_rows(
-  dplyr::mutate(root_stage, xmin = -0.12, xmax = 0.12, fill = "#F8F9FA"),
-  dplyr::mutate(mid_stage, xmin = 0.88, xmax = 1.12, fill = "#F8F9FA"),
-  dplyr::mutate(right_stage, xmin = 1.88, xmax = 2.12, fill = "#F8F9FA")
+  dplyr::mutate(root_stage, xmin = root_xmin, xmax = root_xmax, fill = "#F8F9FA"),
+  dplyr::mutate(mid_stage, xmin = mid_xmin, xmax = mid_xmax, fill = "#F8F9FA"),
+  dplyr::mutate(right_stage, xmin = right_xmin, xmax = right_xmax, fill = "#F8F9FA")
 )
 
 mid_stage <- mid_stage |>
   dplyr::mutate(
     label_text = c(
-      paste0("Gasto corriente\n", fmt_usd(avg_gas_corr), "\n", fmt_pct(avg_gas_corr / avg_ing_mon_cor), " del ingreso"),
-      paste0("Gasto de no consumo\n", fmt_usd(avg_gas_no_con), "\n", fmt_pct(avg_gas_no_con / avg_ing_mon_cor), " del ingreso"),
-      paste0("Ahorro\n", fmt_usd(avg_ahorro), "\n", fmt_pct(avg_ahorro / avg_ing_mon_cor), " del ingreso")
+      paste0("Gasto corriente\n", fmt_usd(avg_gas_corr)),
+      paste0("Gasto de no consumo\n", fmt_usd(avg_gas_no_con)),
+      paste0("Ahorro\n", fmt_usd(avg_ahorro))
     )
   )
 
@@ -285,14 +310,13 @@ right_stage <- right_stage |>
   dplyr::mutate(
     label_text = paste0(
       .data$label, "\n",
-      fmt_usd(.data$value), "\n",
-      fmt_pct(.data$value / avg_ing_mon_cor), " del ingreso"
+      fmt_usd(.data$value)
     )
   )
 
 root_label <- paste0(
   "Ingreso monetario\n",
-  fmt_usd(avg_ing_mon_cor), "\n100% del ingreso"
+  fmt_usd(avg_ing_mon_cor)
 )
 
 plot <- ggplot2::ggplot() +
@@ -325,26 +349,25 @@ plot <- ggplot2::ggplot() +
   ) +
   ggplot2::geom_text(
     data = mid_stage,
-    ggplot2::aes(x = 1, y = .data$ymid, label = .data$label_text),
+    ggplot2::aes(x = mid_label_x, y = .data$ymid, label = .data$label_text),
     size = 3,
     lineheight = 1.02,
     colour = "#212529"
   ) +
   ggplot2::geom_text(
     data = right_stage,
-    ggplot2::aes(x = 2.16, y = .data$ymid, label = .data$label_text),
+    ggplot2::aes(x = right_label_x, y = .data$ymid, label = .data$label_text),
     hjust = 0,
     size = 2.7,
     lineheight = 1.02,
     colour = "#212529"
   ) +
-  ggplot2::coord_cartesian(xlim = c(-0.2, 3.2), ylim = c(0, plot_height), clip = "off") +
+  ggplot2::coord_cartesian(xlim = c(-0.28, 4.35), ylim = c(0, plot_height), clip = "off") +
   ggplot2::scale_fill_identity() +
   ggplot2::scale_alpha_identity() +
   ggplot2::scale_x_continuous(expand = c(0, 0)) +
   ggplot2::scale_y_continuous(expand = c(0, 0), labels = scales::label_dollar(prefix = "$", big.mark = ",")) +
   ggplot2::labs(
-    title = "En que gastan los hogares ecuatorianos su ingreso monetario",
     subtitle = "Descomposicion del ingreso monetario promedio del hogar ENIGHUR 2024-2025",
     x = NULL,
     y = "USD mensuales promedio",
@@ -358,7 +381,7 @@ plot <- ggplot2::ggplot() +
     panel.grid = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
     axis.ticks = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(10, 120, 10, 10),
+    plot.margin = ggplot2::margin(10, 170, 10, 10),
     plot.title = ggplot2::element_text(face = "bold"),
     plot.caption = ggplot2::element_text(hjust = 0)
   )
@@ -369,6 +392,92 @@ save_figure(
   width = 14,
   height = 8,
   dpi = 300
+)
+
+interactive_nodes <- data.frame(
+  label = c(
+    root_label,
+    mid_stage$label_text,
+    right_stage$label_text
+  ),
+  color = c(
+    "#F8F9FA",
+    unname(mid_palette[mid_labels]),
+    category_palette[seq_len(nrow(category_rows))]
+  ),
+  stringsAsFactors = FALSE
+)
+
+interactive_links <- dplyr::bind_rows(
+  data.frame(
+    source = 0,
+    target = seq_along(mid_labels),
+    value = mid_values,
+    color = unname(vapply(mid_palette[mid_labels], with_alpha, character(1), alpha = 0.75)),
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    source = rep(1, nrow(category_rows)),
+    target = seq_len(nrow(category_rows)) + length(mid_labels),
+    value = category_rows$valor_avg,
+    color = vapply(category_palette[seq_len(nrow(category_rows))], with_alpha, character(1), alpha = 0.8),
+    stringsAsFactors = FALSE
+  )
+)
+
+interactive_plot <- plotly::plot_ly(
+  type = "sankey",
+  arrangement = "fixed",
+  node = list(
+    label = interactive_nodes$label,
+    color = interactive_nodes$color,
+    pad = 12,
+    thickness = 22,
+    line = list(color = "#495057", width = 0.4),
+    x = c(0.02, rep(0.37, length(mid_labels)), rep(0.78, nrow(category_rows))),
+    y = c(
+      0.18,
+      seq(0.08, 0.82, length.out = length(mid_labels)),
+      seq(0.03, 0.92, length.out = nrow(category_rows))
+    ),
+    hovertemplate = "%{label}<extra></extra>"
+  ),
+  link = list(
+    source = interactive_links$source,
+    target = interactive_links$target,
+    value = interactive_links$value,
+    color = interactive_links$color,
+    hovertemplate = paste0("%{value:$,.0f} mensuales promedio<extra></extra>")
+  )
+) |>
+  plotly::layout(
+    font = list(size = 12, color = "#212529"),
+    paper_bgcolor = "white",
+    plot_bgcolor = "white",
+    margin = list(l = 20, r = 220, t = 70, b = 50),
+    annotations = list(
+      list(
+        x = 0.02,
+        y = -0.08,
+        xref = "paper",
+        yref = "paper",
+        xanchor = "left",
+        yanchor = "top",
+        align = "left",
+        showarrow = FALSE,
+        text = paste0(
+          "Fuente: INEC, ENIGHUR 2024-2025. Totales nacionales de CUADRO 2.1.1, 2.1.3 y promedio nacional de CUADRO 2.2.1.<br>",
+          "El ahorro se calcula como ingreso monetario menos gasto corriente de consumo y gasto de no consumo."
+        )
+      )
+    )
+  )
+
+interactive_path <- file.path("output", "figures", "sankey_ingresos_gastos_interactivo.html")
+htmlwidgets::saveWidget(
+  plotly::as_widget(interactive_plot),
+  interactive_path,
+  selfcontained = TRUE
 )
 
 print(plot)

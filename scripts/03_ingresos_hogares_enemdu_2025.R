@@ -32,7 +32,7 @@ enemdu_personas_path <- resolve_existing_path(
 
 enemdu_personas <- haven::read_sav(
   enemdu_personas_path,
-  col_select = c(id_hogar, fexp, ingpc)
+  col_select = c(id_hogar, fexp, ingpc, ingrl)
 )
 
 # Consistency rule:
@@ -45,7 +45,13 @@ hogares <- enemdu_personas |>
   dplyr::transmute(
     id_hogar = as.character(.data$id_hogar),
     fexp = as.numeric(.data$fexp),
-    ingpc = as.numeric(.data$ingpc)
+    ingpc = as.numeric(.data$ingpc),
+    ingrl_raw = as.numeric(.data$ingrl),
+    ingrl_clean = dplyr::case_when(
+      is.na(.data$ingrl_raw) ~ 0,
+      .data$ingrl_raw == 999999 ~ NA_real_,
+      TRUE ~ .data$ingrl_raw
+    )
   ) |>
   dplyr::group_by(.data$id_hogar) |>
   dplyr::summarise(
@@ -53,6 +59,8 @@ hogares <- enemdu_personas |>
     hh_size = dplyr::n(),
     ingpc = dplyr::first(.data$ingpc),
     has_complete_income = !is.na(dplyr::first(.data$ingpc)),
+    has_complete_labor_income = !any(.data$ingrl_raw == 999999, na.rm = TRUE),
+    hh_income_laboral_sum_ingrl = sum(.data$ingrl_clean, na.rm = TRUE),
     .groups = "drop"
   ) |>
   dplyr::mutate(
@@ -62,17 +70,34 @@ hogares <- enemdu_personas |>
 hogares_completos <- hogares |>
   dplyr::filter(.data$has_complete_income)
 
-summary_table <- data.frame(
-  scope = "complete_income_households",
-  income_measure = "hh_income_total_from_ingpc",
-  households = nrow(hogares_completos),
-  weighted_mean_income = weighted.mean(hogares_completos$hh_income_total, hogares_completos$fexp),
-  weighted_median_income = weighted_quantile(hogares_completos$hh_income_total, hogares_completos$fexp, 0.5),
-  unweighted_mean_income = mean(hogares_completos$hh_income_total),
-  unweighted_median_income = median(hogares_completos$hh_income_total),
-  households_with_missing_ingpc = sum(!hogares$has_complete_income),
-  weighted_share_complete = weighted.mean(hogares$has_complete_income, hogares$fexp),
-  stringsAsFactors = FALSE
+hogares_laborales_completos <- hogares |>
+  dplyr::filter(.data$has_complete_labor_income)
+
+summary_table <- dplyr::bind_rows(
+  data.frame(
+    scope = "complete_income_households",
+    income_measure = "hh_income_total_from_ingpc",
+    households = nrow(hogares_completos),
+    weighted_mean_income = weighted.mean(hogares_completos$hh_income_total, hogares_completos$fexp),
+    weighted_median_income = weighted_quantile(hogares_completos$hh_income_total, hogares_completos$fexp, 0.5),
+    unweighted_mean_income = mean(hogares_completos$hh_income_total),
+    unweighted_median_income = median(hogares_completos$hh_income_total),
+    households_excluded = sum(!hogares$has_complete_income),
+    weighted_share_complete = weighted.mean(hogares$has_complete_income, hogares$fexp),
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    scope = "complete_labor_income_households",
+    income_measure = "hh_income_sum_ingrl",
+    households = nrow(hogares_laborales_completos),
+    weighted_mean_income = weighted.mean(hogares_laborales_completos$hh_income_laboral_sum_ingrl, hogares_laborales_completos$fexp),
+    weighted_median_income = weighted_quantile(hogares_laborales_completos$hh_income_laboral_sum_ingrl, hogares_laborales_completos$fexp, 0.5),
+    unweighted_mean_income = mean(hogares_laborales_completos$hh_income_laboral_sum_ingrl),
+    unweighted_median_income = median(hogares_laborales_completos$hh_income_laboral_sum_ingrl),
+    households_excluded = sum(!hogares$has_complete_labor_income),
+    weighted_share_complete = weighted.mean(hogares$has_complete_labor_income, hogares$fexp),
+    stringsAsFactors = FALSE
+  )
 )
 
 notes_table <- data.frame(
@@ -81,7 +106,9 @@ notes_table <- data.frame(
     "official_enemdu_income_variable",
     "official_enemdu_syntax_rule",
     "household_income_definition_used",
+    "alternative_household_income_definition",
     "complete_income_rule",
+    "complete_labor_income_rule",
     "enighur_consistency_note"
   ),
   detail = c(
@@ -89,7 +116,9 @@ notes_table <- data.frame(
     "ingpc",
     "The official ENEMDU annual syntax ranks income using ingpc.",
     "Household total income = ingpc * household size.",
+    "Alternative check: household labor income = sum of person-level ingrl within id_hogar.",
     "Complete-income households require non-missing ingpc.",
+    "Complete labor-income households exclude households where any person has ingrl = 999999; ingrl = -1 is kept as a valid labeled value.",
     "This is the ENEMDU measure most consistent with ENIGHUR household income analysis."
   ),
   stringsAsFactors = FALSE
