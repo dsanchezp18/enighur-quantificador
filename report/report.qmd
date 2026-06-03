@@ -1,0 +1,31 @@
+---
+title: "Ingresos y gastos de los ecuatorianos, 12 años después"
+subtitle: "ENIGHUR 2024-2025"
+author: "Daniel Sánchez Pazmiño"
+date: "2026-06-01"
+date-format: "MMMM YYYY"
+output-file: "enighur_articulo_quantificador.pdf"
+format: pdf # Change to html if LaTeX not installed or causing issues
+execute:
+    echo: false
+    warning: false
+    message: false
+fig-align: center
+fig-pos: h
+geometry: 
+    - margin = 1in
+fig-cap-location: top
+tbl-cap-location: top
+number-sections: true
+fontsize: 12pt
+# bibliography: references.bib
+header-includes:
+    - \usepackage{float}
+    - \floatplacement{table}{H}
+    - \setkomafont{author}{\normalsize}
+    - \setkomafont{disposition}{\bfseries \normalsize}
+    - \setkomafont{subtitle}{\normalsize}
+    - \setkomafont{date}{\normalsize}
+---
+
+Las agencias estadisticas de un pais reportan informacion crucial para 

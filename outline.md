@@ -15,34 +15,35 @@ execute:
   warning: false
   message: false
 ---
-
 # outline
 
 1. ingresos
+
 - ingreso, distribucion
   - comparacion enighur antigua
 - ingreso, estructura
 - comparacion enemdu (oracion)
-- gini?, desigualdad.  
+- gini?, desigualdad.
+
 2. gastos
+
 - gasto, distribucion por quintil y total
   - - comparacion enighur antigua
 - gasto, estructura
- - gasto en comida, en donde es mas caro
- - gasto en vivienda, en donde es mas caro
+- gasto en comida, en donde es mas caro
+- gasto en vivienda, en donde es mas caro
 
-grafico principal: en que gastan los hogares ecuatorianos? 
-  - un sankey
-  - un treemap
+grafico principal: en que gastan los hogares ecuatorianos?
+
+- un sankey
+- un treemap
 
 xq es importante?
 
 - cpi
 - inflacion
 - entre otros
-
-- enfoque en gastos en licor. 
-
+- enfoque en gastos en licor.
 
 # La distribución del ingreso de los hogares es prácticamente la misma que hace 12 años, sugiriendo que la desigualdad no ha mejorado
 
@@ -52,12 +53,10 @@ xq es importante?
 
 # regional: region x tiene el mejor ingreso, y tiene el peor
 
-# la distribucion del gasto... 
+# la distribucion del gasto...
 
 # Los hogares mas ricos gastan x% mas
 
-# Los hogares ecuatorianos gastan X% en comida, y x% en vivienda. 
+# Los hogares ecuatorianos gastan X% en comida, y x% en vivienda.
 
 # [provincia] la mas cara para comer es la siguiente
-
-

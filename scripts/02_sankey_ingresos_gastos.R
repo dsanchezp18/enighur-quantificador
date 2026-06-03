@@ -363,5 +363,4 @@ plot <- ggplot2::ggplot() +
     plot.caption = ggplot2::element_text(hjust = 0)
   )
 
-save_figure("sankey_ingresos_gastos_2025.png", plot, width = 12, height = 8, dpi = 300)
-cat("Guardado: output/figures/sankey_ingresos_gastos_2025.png\n")
+print(plot)
