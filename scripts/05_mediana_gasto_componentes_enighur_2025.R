@@ -33,6 +33,77 @@ weighted_total <- function(x, w) {
   sum(x[keep] * w[keep], na.rm = TRUE)
 }
 
+compute_sum1 <- function(data, vars) {
+  present <- vars[vars %in% names(data)]
+  if (length(present) == 0) {
+    return(rep(NA_real_, nrow(data)))
+  }
+
+  tmp <- as.data.frame(lapply(data[present], as.numeric))
+  out <- rowSums(tmp, na.rm = TRUE)
+  all_missing <- rowSums(!is.na(tmp)) == 0
+  out[all_missing] <- NA_real_
+  out
+}
+
+parse_spss_compute_lines <- function(path) {
+  lines <- readLines(path, warn = FALSE, encoding = "latin1")
+  lines <- iconv(lines, from = "latin1", to = "UTF-8", sub = " ")
+  lines <- gsub("\t", " ", lines)
+
+  exprs <- character()
+  current <- NULL
+
+  for (ln in lines) {
+    ln2 <- trimws(ln)
+    if (grepl("^COMPUTE\\s+", ln2, ignore.case = TRUE)) {
+      current <- ln2
+      if (grepl("\\.$", current)) {
+        exprs <- c(exprs, current)
+        current <- NULL
+      }
+    } else if (!is.null(current)) {
+      current <- paste(current, ln2)
+      if (grepl("\\.$", ln2)) {
+        exprs <- c(exprs, current)
+        current <- NULL
+      }
+    }
+  }
+
+  exprs
+}
+
+apply_spss_sum_syntax <- function(data, exprs) {
+  for (expr in exprs) {
+    expr <- sub("^COMPUTE\\s+", "", expr, ignore.case = TRUE)
+    expr <- sub("\\.$", "", expr)
+    parts <- strsplit(expr, "=", fixed = TRUE)[[1]]
+    if (length(parts) < 2) {
+      next
+    }
+
+    lhs <- trimws(parts[1])
+    rhs <- trimws(paste(parts[-1], collapse = "="))
+    rhs <- gsub("SUMA?\\.1", "SUM.1", rhs, ignore.case = TRUE)
+
+    if (grepl("^SUM\\.1\\s*\\(", rhs, ignore.case = TRUE)) {
+      inside <- sub("^SUM\\.1\\s*\\(", "", rhs, ignore.case = TRUE)
+      inside <- sub("\\)$", "", inside)
+      vars <- trimws(unlist(strsplit(inside, ",")))
+      vars <- vars[nzchar(vars)]
+      data[[lhs]] <- compute_sum1(data, vars)
+    } else {
+      rhs_var <- trimws(rhs)
+      if (rhs_var %in% names(data)) {
+        data[[lhs]] <- as.numeric(data[[rhs_var]])
+      }
+    }
+  }
+
+  data
+}
+
 build_share_table <- function(data, survey_label, component_map, gasto_map, include_zone_split = FALSE) {
   original_table <- data.frame(
     encuesta = survey_label,
@@ -388,16 +459,9 @@ gastos_hmo_path <- resolve_existing_path(
   "Dataset 2012 GASTOS_HMO"
 )
 
-gastos_htot_path <- resolve_existing_path(
-  c(
-    file.path("data", "enighur", "2012", "required", "ENIGHUR11_GASTOS_HTOT.sav"),
-    file.path(
-      "data", "enighur", "2012",
-      "bbd_ingresos_gastos_2011-2012", "2011-2012", "Ingresos_Gastos",
-      "02 BASE DE DATOS", "02 TABLAS DE TRABAJO", "07 ENIGHUR11_GASTOS_HTOT.sav"
-    )
-  ),
-  "Dataset 2012 GASTOS_HTOT"
+gasto_syntax_path_2012 <- resolve_existing_path(
+  file.path("data", "enighur", "2012", "04_SINTAXIS", "04 SINTAXIS", "AGREGADO DEL GASTO.sps"),
+  "Sintaxis 2012 AGREGADO DEL GASTO"
 )
 
 gas_ag_2012 <- haven::read_sav(gastos_hmo_path) |>
@@ -473,9 +537,12 @@ share_table <- dplyr::bind_rows(
 
 # ============================================================
 # Ahorro (savings) by zone — household level for BOTH surveys
-# 2025: ing_mon_cor - gas_mon_cor (monetary current income minus monetary spending)
-# 2012: ing_mon_cor - sum(d1-d12) from GASTOS_HMO subclass totals (monetary consumption)
-#       Both deflated to 2024-2025 prices.
+# Consistent with the sankey definition:
+# ahorro monetario = ingreso monetario corriente - gasto monetario corriente
+# 2025: uses pre-computed gas_mon_cor from the ENIGHUR household base
+# 2012: reconstructs gas_mon_cor following the official INEC SPSS syntax
+#        gas_mon_cor = gas_gru_cor + ot_gas_mon
+# Both survey rounds are expressed at 2024-2025 prices.
 # ============================================================
 
 deflator_2012 <- 113.6774 / 90.0032
@@ -496,31 +563,6 @@ ahorro_2025 <- dplyr::bind_rows(
   make_ahorro_row("ENIGHUR 2024-2025", "Urbana", hogares[hogares$zona == "Urbana", , drop = FALSE]),
   make_ahorro_row("ENIGHUR 2024-2025", "Rural",  hogares[hogares$zona == "Rural",  , drop = FALSE])
 )
-
-# 2012: sum individual spending items from GASTOS_HTOT (the compiled total-spending file).
-# Variables ending in "00" are zero-filled SPSS compute placeholders — skip them.
-# Individual items end in 01-99, 97, 98, 99, etc.
-# Single-digit divisions (1-9) → 7-char variable names; two-digit (10-12) → 8-char.
-col_names_htot <- names(haven::read_sav(gastos_htot_path, n_max = 0))
-
-div_spend_vars <- unlist(lapply(1:12, function(div) {
-  pref <- paste0("c", div)
-  len  <- if (div < 10) 7L else 8L
-  col_names_htot[nchar(col_names_htot) == len &
-                   startsWith(col_names_htot, pref) &
-                   !grepl("00$", col_names_htot)]
-}))
-
-gastos_htot_spend <- haven::read_sav(
-  gastos_htot_path,
-  col_select = c("Identif_hog", tidyselect::all_of(div_spend_vars))
-)
-gastos_htot_spend$gas_cor_2012 <- rowSums(
-  as.data.frame(gastos_htot_spend[, div_spend_vars, drop = FALSE]),
-  na.rm = TRUE
-)
-gastos_2012_hh <- gastos_htot_spend[, c("Identif_hog", "gas_cor_2012")]
-rm(gastos_htot_spend)
 
 # Re-compute 2012 income keeping Identif_hog and zone variable (Área).
 ingresos_2012_zona <- haven::read_sav(data_path_2012) |>
@@ -551,19 +593,34 @@ ingresos_2012_zona <- haven::read_sav(data_path_2012) |>
     tranf_cor        = rowSums(cbind(i1444001,i1444002,i1444003,i1444004,
                                      i1444005,i1444006,i1444007), na.rm=TRUE),
     otro_ing_cor     = dplyr::coalesce(as.numeric(b1443001), 0),
-    ing_mon_cor      = ing_trab_mon + ing_ren_prop_cap + tranf_cor + otro_ing_cor
+    ing_mon_cor      = ing_trab_mon + ing_ren_prop_cap + tranf_cor + otro_ing_cor,
+    ot_gas_mon       = rowSums(cbind(i1709001, i1709003, i1709004, i1709005,
+                                     i1709006, i1709007, i1709008), na.rm = TRUE)
   ) |>
   dplyr::transmute(
     Identif_hog = .data$Identif_hog,
     fexp        = as.numeric(.data$Fexp_cen2010),
     zona        = ifelse(as.numeric(.data$`Área`) == 1, "Urbana", "Rural"),
-    ing_mon_cor = as.numeric(.data$ing_mon_cor) * deflator_2012
+    ing_mon_cor = as.numeric(.data$ing_mon_cor) * deflator_2012,
+    ot_gas_mon  = as.numeric(.data$ot_gas_mon)
+  )
+
+gastos_2012_monetario <- haven::read_sav(gastos_hmo_path) |>
+  as.data.frame()
+
+gasto_exprs_2012 <- parse_spss_compute_lines(gasto_syntax_path_2012)
+gasto_exprs_2012 <- gasto_exprs_2012[grepl("^(COMPUTE\\s+)?(c|g|d|gas_gru_cor)", gasto_exprs_2012, ignore.case = TRUE)]
+gastos_2012_monetario <- apply_spss_sum_syntax(gastos_2012_monetario, gasto_exprs_2012) |>
+  dplyr::transmute(
+    Identif_hog = .data$Identif_hog,
+    gas_gru_cor = as.numeric(.data$gas_gru_cor)
   )
 
 ahorro_2012_hh <- ingresos_2012_zona |>
-  dplyr::left_join(gastos_2012_hh, by = "Identif_hog") |>
+  dplyr::left_join(gastos_2012_monetario, by = "Identif_hog") |>
   dplyr::mutate(
-    ahorro_mon = .data$ing_mon_cor - as.numeric(.data$gas_cor_2012) * deflator_2012
+    gas_mon_cor = (as.numeric(.data$gas_gru_cor) + .data$ot_gas_mon) * deflator_2012,
+    ahorro_mon = .data$ing_mon_cor - .data$gas_mon_cor
   ) |>
   dplyr::filter(!is.na(.data$ahorro_mon))
 
@@ -609,7 +666,7 @@ notes_table <- data.frame(
     "Expenditure shares are weighted totals divided by the sum of the 13 original ENIGHUR consumption components. For 2024-2025, urban and rural shares are also shown.",
     "Ingreso no agricola is defined here as ingreso monetario total minus ingreso agricola neto.",
     "ENIGHUR 2024-2025 savings: monetary savings = ing_mon_cor - gas_mon_cor (monetary current income minus monetary current spending). Weighted mean and median at household level.",
-    "ENIGHUR 2011-2012 savings: reconstructed monetary ing_mon_cor (INEC SPSS syntax) minus total purchases from GASTOS_HTOT (all survey instruments: daily diaries + monthly + quarterly + annual). HTOT individual items identified by variable-name length (7 chars divs 1-9, 8 chars divs 10-12) excluding zero-filled SPSS subtotals (vars ending in '00'). HTOT national weighted mean ≈ $788/month nominal (97% of TABULADOS $809). Both deflated to 2024-2025 prices (IPC 1.2631). Negative savings in 2012 reflect that monetary income (~$708/month nominal) was less than total market purchases (~$788/month nominal); the gap was financed by non-monetary income (own agricultural production, imputed housing, etc.) not captured in ing_mon_cor. Weighted mean and median at household level."
+    "ENIGHUR 2011-2012 savings: monetary savings = reconstructed ing_mon_cor minus reconstructed gas_mon_cor, following the official INEC SPSS syntax. Monetary spending is gas_gru_cor + ot_gas_mon, using d1-d12 from GASTOS_HMO plus non-consumption monetary spending from INGRESOS_H. Both deflated to 2024-2025 prices (IPC factor 1.2631). Weighted mean and median at household level."
   ),
   stringsAsFactors = FALSE
 )
