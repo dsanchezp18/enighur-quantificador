@@ -271,12 +271,51 @@ hogares$ahorro_mon <- as.numeric(hogares$ing_mon_cor) - as.numeric(hogares$gas_m
 province_labels <- attr(hogares$PROVINCIA, "labels")
 hogares$provincia_nombre <- names(province_labels)[match(as.numeric(hogares$PROVINCIA), unname(province_labels))]
 
+gastos_hmo_2025 <- ENIGHUR2025_GASTOS_HMO |>
+  dplyr::transmute(
+    Identif_hog = .data$Identif_hog,
+    gasolina_mon = rowSums(cbind(
+      as.numeric(.data$c7222001),
+      as.numeric(.data$c7222003),
+      as.numeric(.data$c7222005)
+    ), na.rm = TRUE)
+  )
+
+hogares <- hogares |>
+  dplyr::left_join(gastos_hmo_2025, by = "Identif_hog") |>
+  dplyr::mutate(
+    gasolina_mon = dplyr::coalesce(as.numeric(.data$gasolina_mon), 0),
+    gasto_gasolina = .data$gasolina_mon > 0
+  )
+
 map_path <- resolve_existing_path(
   file.path("data", "intermediate", "mapeo_categorias_gasto.csv"),
   "Mapping gasto categorias"
 )
 
 gasto_map <- utils::read.csv(map_path, stringsAsFactors = FALSE)
+
+category_order <- gasto_map |>
+  dplyr::distinct(.data$categoria_codigo, .data$categoria_nombre, .data$orden) |>
+  dplyr::arrange(.data$orden)
+
+for (i in seq_len(nrow(category_order))) {
+  cat_code <- category_order$categoria_codigo[[i]]
+  vars <- gasto_map$codigo_enighur[gasto_map$categoria_codigo == cat_code]
+  hogares[[paste0("cat_", cat_code)]] <- rowSums(hogares[, vars, drop = FALSE], na.rm = TRUE)
+}
+
+income_quintile_breaks <- vapply(c(0.20, 0.40, 0.60, 0.80), function(p) {
+  weighted_quantile(as.numeric(hogares$ing_mon_cor), hogares$fexp, p)
+}, numeric(1))
+
+hogares$quintil_ingreso <- cut(
+  as.numeric(hogares$ing_mon_cor),
+  breaks = c(-Inf, income_quintile_breaks, Inf),
+  labels = c("Q1", "Q2", "Q3", "Q4", "Q5"),
+  right = TRUE,
+  include.lowest = TRUE
+)
 
 component_map <- data.frame(
   variable = c("gas_cor_tot", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13"),
@@ -313,16 +352,6 @@ median_rows <- lapply(seq_len(nrow(component_map)), function(i) {
 median_table <- dplyr::bind_rows(median_rows)
 
 province_median_table <- {
-  category_order <- gasto_map |>
-    dplyr::distinct(.data$categoria_codigo, .data$categoria_nombre, .data$orden) |>
-    dplyr::arrange(.data$orden)
-
-  for (i in seq_len(nrow(category_order))) {
-    cat_code <- category_order$categoria_codigo[[i]]
-    vars <- gasto_map$codigo_enighur[gasto_map$categoria_codigo == cat_code]
-    hogares[[paste0("cat_", cat_code)]] <- rowSums(hogares[, vars, drop = FALSE], na.rm = TRUE)
-  }
-
   component_cols <- c("gas_cor_tot", paste0("cat_", category_order$categoria_codigo))
   output_names <- c("mediana_gasto_total", paste0("mediana_", category_order$categoria_codigo))
 
@@ -354,13 +383,13 @@ ingreso_gasto_total_zona <- {
   make_zone_summary <- function(label, subset_data) {
     data.frame(
       zona = label,
-      indicador = c("Gasto corriente total del hogar", "Ingreso monetario total del hogar"),
+      indicador = c("Gasto monetario total del hogar", "Ingreso monetario total del hogar"),
       weighted_mean = c(
-        weighted_total(as.numeric(subset_data$gas_cor_tot), subset_data$fexp) / sum(subset_data$fexp, na.rm = TRUE),
+        weighted_total(as.numeric(subset_data$gas_mon_cor), subset_data$fexp) / sum(subset_data$fexp, na.rm = TRUE),
         weighted_total(as.numeric(subset_data$ing_mon_cor), subset_data$fexp) / sum(subset_data$fexp, na.rm = TRUE)
       ),
       weighted_median = c(
-        weighted_quantile(as.numeric(subset_data$gas_cor_tot), subset_data$fexp, 0.5),
+        weighted_quantile(as.numeric(subset_data$gas_mon_cor), subset_data$fexp, 0.5),
         weighted_quantile(as.numeric(subset_data$ing_mon_cor), subset_data$fexp, 0.5)
       ),
       stringsAsFactors = FALSE
@@ -371,6 +400,204 @@ ingreso_gasto_total_zona <- {
     make_zone_summary("Total", hogares),
     make_zone_summary("Urbana", hogares[hogares$zona == "Urbana", , drop = FALSE]),
     make_zone_summary("Rural", hogares[hogares$zona == "Rural", , drop = FALSE])
+  )
+}
+
+ingresos_gastos_urbano_rural <- {
+  stats <- c(0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90)
+  stat_labels <- c("d1_p10", "q1_p20", "d3_p30", "q2_p40", "mediana_p50", "q3_p60", "d7_p70", "q4_p80", "d9_p90")
+
+  make_distribution_rows <- function(zona_label, subset_data) {
+    dplyr::bind_rows(
+      data.frame(
+        zona = zona_label,
+        indicador = "Ingreso monetario total del hogar",
+        estadistico = stat_labels,
+        valor = vapply(stats, function(p) weighted_quantile(as.numeric(subset_data$ing_mon_cor), subset_data$fexp, p), numeric(1)),
+        stringsAsFactors = FALSE
+      ),
+      data.frame(
+        zona = zona_label,
+        indicador = "Gasto monetario total del hogar",
+        estadistico = stat_labels,
+        valor = vapply(stats, function(p) weighted_quantile(as.numeric(subset_data$gas_mon_cor), subset_data$fexp, p), numeric(1)),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  dplyr::bind_rows(
+    make_distribution_rows("Total", hogares),
+    make_distribution_rows("Urbana", hogares[hogares$zona == "Urbana", , drop = FALSE]),
+    make_distribution_rows("Rural", hogares[hogares$zona == "Rural", , drop = FALSE])
+  )
+}
+
+componentes_urbano_rural <- {
+  lapply(seq_len(nrow(category_order)), function(i) {
+    cat_code <- category_order$categoria_codigo[[i]]
+    var_name <- paste0("cat_", cat_code)
+    mediana_urbana <- weighted_quantile(as.numeric(hogares[[var_name]][hogares$zona == "Urbana"]), hogares$fexp[hogares$zona == "Urbana"], 0.5)
+    mediana_rural <- weighted_quantile(as.numeric(hogares[[var_name]][hogares$zona == "Rural"]), hogares$fexp[hogares$zona == "Rural"], 0.5)
+
+    data.frame(
+      componente = category_order$categoria_nombre[[i]],
+      variable = var_name,
+      mediana_urbana = mediana_urbana,
+      mediana_rural = mediana_rural,
+      brecha_urbana_menos_rural = mediana_urbana - mediana_rural,
+      stringsAsFactors = FALSE
+    )
+  }) |>
+    dplyr::bind_rows()
+}
+
+quintiles_ingreso_gasto <- {
+  probs <- c(0.20, 0.25, 0.40, 0.50, 0.60, 0.75, 0.80)
+  labels <- c("q1_p20", "p25", "q2_p40", "mediana_p50", "q3_p60", "p75", "q4_p80")
+
+  make_quintile_rows <- function(quintil_label, subset_data) {
+    dplyr::bind_rows(
+      data.frame(
+        quintil_ingreso = quintil_label,
+        indicador = "Ingreso monetario total del hogar",
+        estadistico = labels,
+        valor = vapply(probs, function(p) weighted_quantile(as.numeric(subset_data$ing_mon_cor), subset_data$fexp, p), numeric(1)),
+        stringsAsFactors = FALSE
+      ),
+      data.frame(
+        quintil_ingreso = quintil_label,
+        indicador = "Gasto monetario total del hogar",
+        estadistico = labels,
+        valor = vapply(probs, function(p) weighted_quantile(as.numeric(subset_data$gas_mon_cor), subset_data$fexp, p), numeric(1)),
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  dplyr::bind_rows(
+    make_quintile_rows("Nacional", hogares),
+    dplyr::bind_rows(lapply(c("Q1", "Q2", "Q3", "Q4", "Q5"), function(q) {
+      make_quintile_rows(q, hogares[hogares$quintil_ingreso == q, , drop = FALSE])
+    }))
+  )
+}
+
+componentes_quintiles <- {
+  lapply(seq_len(nrow(category_order)), function(i) {
+    cat_code <- category_order$categoria_codigo[[i]]
+    var_name <- paste0("cat_", cat_code)
+
+    dplyr::bind_rows(
+      data.frame(
+        quintil_ingreso = "Nacional",
+        componente = category_order$categoria_nombre[[i]],
+        variable = var_name,
+        mediana = weighted_quantile(as.numeric(hogares[[var_name]]), hogares$fexp, 0.5),
+        stringsAsFactors = FALSE
+      ),
+      dplyr::bind_rows(lapply(c("Q1", "Q2", "Q3", "Q4", "Q5"), function(q) {
+        subset_data <- hogares[hogares$quintil_ingreso == q, , drop = FALSE]
+        data.frame(
+          quintil_ingreso = q,
+          componente = category_order$categoria_nombre[[i]],
+          variable = var_name,
+          mediana = weighted_quantile(as.numeric(subset_data[[var_name]]), subset_data$fexp, 0.5),
+          stringsAsFactors = FALSE
+        )
+      }))
+    )
+  }) |>
+    dplyr::bind_rows()
+}
+
+gasolina_quintiles <- {
+  make_gas_row <- function(quintil_label, subset_data) {
+    weighted_pop <- sum(subset_data$fexp, na.rm = TRUE)
+    weighted_users <- sum(subset_data$fexp[subset_data$gasto_gasolina], na.rm = TRUE)
+    positive_vals <- subset_data$gasolina_mon[subset_data$gasto_gasolina]
+    positive_wts <- subset_data$fexp[subset_data$gasto_gasolina]
+    total_gasto_monetario <- weighted_total(subset_data$gas_mon_cor, subset_data$fexp)
+
+    data.frame(
+      quintil_ingreso = quintil_label,
+      weighted_mean_all = weighted_total(subset_data$gasolina_mon, subset_data$fexp) / weighted_pop,
+      weighted_median_all = weighted_quantile(subset_data$gasolina_mon, subset_data$fexp, 0.5),
+      weighted_share_with_spend = weighted_users / weighted_pop,
+      share_of_gasto_monetario = weighted_total(subset_data$gasolina_mon, subset_data$fexp) / total_gasto_monetario,
+      weighted_mean_spenders = if (weighted_users > 0) weighted_total(positive_vals, positive_wts) / weighted_users else NA_real_,
+      weighted_median_spenders = if (weighted_users > 0) weighted_quantile(positive_vals, positive_wts, 0.5) else NA_real_,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  dplyr::bind_rows(
+    make_gas_row("Nacional", hogares),
+    dplyr::bind_rows(lapply(c("Q1", "Q2", "Q3", "Q4", "Q5"), function(q) {
+      make_gas_row(q, hogares[hogares$quintil_ingreso == q, , drop = FALSE])
+    }))
+  )
+}
+
+gasolina_zona <- {
+  make_gas_zone_row <- function(zona_label, subset_data) {
+    weighted_pop <- sum(subset_data$fexp, na.rm = TRUE)
+    weighted_users <- sum(subset_data$fexp[subset_data$gasto_gasolina], na.rm = TRUE)
+    positive_vals <- subset_data$gasolina_mon[subset_data$gasto_gasolina]
+    positive_wts <- subset_data$fexp[subset_data$gasto_gasolina]
+    total_gasto_monetario <- weighted_total(subset_data$gas_mon_cor, subset_data$fexp)
+
+    data.frame(
+      zona = zona_label,
+      weighted_mean_all = weighted_total(subset_data$gasolina_mon, subset_data$fexp) / weighted_pop,
+      weighted_median_all = weighted_quantile(subset_data$gasolina_mon, subset_data$fexp, 0.5),
+      weighted_share_with_spend = weighted_users / weighted_pop,
+      share_of_gasto_monetario = weighted_total(subset_data$gasolina_mon, subset_data$fexp) / total_gasto_monetario,
+      weighted_mean_spenders = if (weighted_users > 0) weighted_total(positive_vals, positive_wts) / weighted_users else NA_real_,
+      weighted_median_spenders = if (weighted_users > 0) weighted_quantile(positive_vals, positive_wts, 0.5) else NA_real_,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  dplyr::bind_rows(
+    make_gas_zone_row("Total", hogares),
+    make_gas_zone_row("Urbana", hogares[hogares$zona == "Urbana", , drop = FALSE]),
+    make_gas_zone_row("Rural", hogares[hogares$zona == "Rural", , drop = FALSE])
+  )
+}
+
+gasolina_provincia_q5 <- {
+  q5_data <- hogares[hogares$quintil_ingreso == "Q5", , drop = FALSE]
+  prov <- q5_data |>
+    dplyr::group_by(.data$provincia_nombre) |>
+    dplyr::summarise(weighted_households = sum(.data$fexp, na.rm = TRUE), .groups = "drop") |>
+    dplyr::mutate(
+      share_q5_households = .data$weighted_households / sum(.data$weighted_households, na.rm = TRUE)
+    ) |>
+    dplyr::arrange(dplyr::desc(.data$share_q5_households))
+
+  names(prov)[1] <- "provincia"
+  prov
+}
+
+chart_gasto_quintiles <- {
+  probs <- c(0.10, 0.25, 0.50, 0.75, 0.90)
+  labels <- c("p10", "p25", "p50", "p75", "p90")
+
+  make_chart_row <- function(quintil_label, subset_data) {
+    data.frame(
+      quintil_ingreso = quintil_label,
+      percentil = labels,
+      valor = vapply(probs, function(p) weighted_quantile(as.numeric(subset_data$gas_mon_cor), subset_data$fexp, p), numeric(1)),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  dplyr::bind_rows(
+    make_chart_row("Nacional", hogares),
+    dplyr::bind_rows(lapply(c("Q1", "Q2", "Q3", "Q4", "Q5"), function(q) {
+      make_chart_row(q, hogares[hogares$quintil_ingreso == q, , drop = FALSE])
+    }))
   )
 }
 
@@ -654,6 +881,8 @@ notes_table <- data.frame(
     "statistic",
     "coverage",
     "share_definition",
+    "income_quintile_definition",
+    "gasoline_definition",
     "agricultural_income_definition",
     "ahorro_definition_2025",
     "ahorro_definition_2012"
@@ -664,6 +893,8 @@ notes_table <- data.frame(
     "All values are weighted medians using the household expansion factor.",
     "Includes total current expenditure and the 13 main expenditure components.",
     "Expenditure shares are weighted totals divided by the sum of the 13 original ENIGHUR consumption components. For 2024-2025, urban and rural shares are also shown.",
+    "Income quintiles are defined from the weighted distribution of household monetary income (ing_mon_cor) in ENIGHUR 2024-2025.",
+    "Gasolina is defined as the sum of ENIGHUR items c7222001 (eco país), c7222003 (extra), and c7222005 (súper) from ENIGHUR2025_GASTOS_HMO.",
     "Ingreso no agricola is defined here as ingreso monetario total minus ingreso agricola neto.",
     "ENIGHUR 2024-2025 savings: monetary savings = ing_mon_cor - gas_mon_cor (monetary current income minus monetary current spending). Weighted mean and median at household level.",
     "ENIGHUR 2011-2012 savings: monetary savings = reconstructed ing_mon_cor minus reconstructed gas_mon_cor, following the official INEC SPSS syntax. Monetary spending is gas_gru_cor + ot_gas_mon, using d1-d12 from GASTOS_HMO plus non-consumption monetary spending from INGRESOS_H. Both deflated to 2024-2025 prices (IPC factor 1.2631). Weighted mean and median at household level."
@@ -687,6 +918,42 @@ apply_sheet_style(
 
 openxlsx::addWorksheet(wb, "ingreso_gasto_total_zona")
 apply_sheet_style(wb, "ingreso_gasto_total_zona", ingreso_gasto_total_zona, currency_cols = 3:4)
+
+openxlsx::addWorksheet(wb, "ingresos y gastos urbano rural")
+apply_sheet_style(wb, "ingresos y gastos urbano rural", ingresos_gastos_urbano_rural, currency_cols = 4)
+
+openxlsx::addWorksheet(wb, "componentes urbano rural")
+apply_sheet_style(wb, "componentes urbano rural", componentes_urbano_rural, currency_cols = 3:5)
+
+openxlsx::addWorksheet(wb, "quintiles ingreso gasto")
+apply_sheet_style(wb, "quintiles ingreso gasto", quintiles_ingreso_gasto, currency_cols = 4)
+
+openxlsx::addWorksheet(wb, "componentes quintiles")
+apply_sheet_style(wb, "componentes quintiles", componentes_quintiles, currency_cols = 4)
+
+openxlsx::addWorksheet(wb, "chart gasto quintiles")
+apply_sheet_style(wb, "chart gasto quintiles", chart_gasto_quintiles, currency_cols = 3)
+
+openxlsx::addWorksheet(wb, "gasolina quintiles")
+apply_sheet_style(wb, "gasolina quintiles", gasolina_quintiles, currency_cols = c(2, 3, 5, 6))
+openxlsx::addStyle(
+  wb, "gasolina quintiles", openxlsx::createStyle(numFmt = "0.0%"),
+  rows = 2:(nrow(gasolina_quintiles) + 1), cols = c(4, 5), gridExpand = TRUE, stack = TRUE
+)
+
+openxlsx::addWorksheet(wb, "gasolina zona")
+apply_sheet_style(wb, "gasolina zona", gasolina_zona, currency_cols = c(2, 3, 5, 6))
+openxlsx::addStyle(
+  wb, "gasolina zona", openxlsx::createStyle(numFmt = "0.0%"),
+  rows = 2:(nrow(gasolina_zona) + 1), cols = c(4, 5), gridExpand = TRUE, stack = TRUE
+)
+
+openxlsx::addWorksheet(wb, "q5 provincias")
+apply_sheet_style(wb, "q5 provincias", gasolina_provincia_q5, currency_cols = 2)
+openxlsx::addStyle(
+  wb, "q5 provincias", openxlsx::createStyle(numFmt = "0.0%"),
+  rows = 2:(nrow(gasolina_provincia_q5) + 1), cols = 3, gridExpand = TRUE, stack = TRUE
+)
 
 openxlsx::addWorksheet(wb, "percentiles_ingreso")
 apply_sheet_style(wb, "percentiles_ingreso", income_percentiles, currency_cols = 3)

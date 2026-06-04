@@ -17,7 +17,7 @@ geometry:
     - margin = 1in
 fig-cap-location: top
 tbl-cap-location: top
-number-sections: true
+number-sections: false
 fontsize: 12pt
 # bibliography: references.bib
 header-includes:
@@ -33,37 +33,40 @@ header-includes:
 
 # ¿De qué sirven las encuestas de ingreso y gasto?
 
-Las agencias estadísticas de un país reportan información crucial sobre su sociedad y economía, para así orientar mejor la creación de política pública y apoyar la toma de decisiones en todos los sectores de la sociedad. En Ecuador, dicha agencia es el Instituto Nacional de Estadística y Censos (INEC), que tiene el mandato de llevar a cabo el censo decenal, así como varias encuestas y la recolección de datos administrativos. 
+Las agencias estadísticas de un país reportan información crucial sobre su sociedad y economía, para así orientar mejor la toma de decisiones en todos los sectores de la sociedad. En Ecuador, dicha agencia es el Instituto Nacional de Estadística y Censos (INEC), que tiene el mandato de llevar a cabo el censo decenal, así como varias encuestas y la recolección de datos administrativos. 
 
-Uno de estos productos es la *Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales* (ENIGHUR). Esta encuesta es la fuente principal para comprender los patrones de ingreso y gasto en Ecuador. Se preguntarán: ¿de qué sirve esta encuesta si ya se cuenta con la encuesta de empleo, que nos da ingresos del hogar? Bueno, la ENIGHUR es extremadamente detallada en las cantidades y fuentes de ingreso de los ecuatorianos, dándonos información desagregada sobre de dónde ganan dinero, más allá de agregados amplios. Esto permite entender la distribución del dinero en la sociedad de una mejor manera. El ingreso es una variable importante para varios programas públicos, puesto que solo ciertas personas que ganan poco dinero suelen ser elegibles. Por otro lado, comprender la estratificación socioeconómica también es importante para las empresas al momento de poner precios, por ejemplo.
+Uno de estos productos es la *Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales* (ENIGHUR). Esta encuesta es la fuente principal para comprender los patrones de ingreso y gasto en Ecuador. Se preguntarán: ¿de qué sirve esta encuesta si ya se cuenta con la encuesta de empleo (ENEMDU), que nos da ingresos del hogar? Bueno, la ENIGHUR es extremadamente detallada en las cantidades y fuentes de ingreso de los ecuatorianos, dándonos información desagregada sobre los ingresos, sus fuentes, entre otras variables de interes.  
 
-La ENIGHUR es especialmente importante porque es la única encuesta que detalla el gasto de los hogares de forma desagregada. Una de las estadísticas más importantes, la tasa de inflación mensual, depende de entender cómo gastan las personas su dinero; es decir, qué porcentaje de sus gastos está dedicado a cada uno de los componentes de la tasa de inflación. Sin estos valores, llamados "pesos", es imposible calcular una tasa de inflación representativa para el consumidor promedio, es decir, la mayoría de ecuatorianos. La última ENIGHUR se realizó hace más de una década (2011-2012), y en este tiempo el comportamiento de los hogares probablemente ha cambiado. Sin los pesos que describo, la inflación en todos estos años, particularmente en los últimos, está probablemente mal calculada. 
+La ENIGHUR es especialmente importante porque es la única encuesta que detalla el gasto de los hogares. Una de las estadísticas más importantes, la tasa de inflación mensual, depende de entender cómo gastan las personas su dinero; es decir, qué porcentaje de sus gastos está dedicado a cada uno de los componentes de la tasa de inflación. Sin estos valores, llamados "pesos", es imposible calcular una tasa de inflación representativa para el consumidor promedio, es decir, la mayoría de ecuatorianos. La última ENIGHUR se realizó hace más de una década (2011-2012), y en este tiempo el comportamiento de los hogares probablemente ha cambiado. Sin los pesos que describo, la inflación en todos estos años, particularmente en los últimos, está probablemente mal calculada. 
 
 En su extremo detalle, la ENIGHUR también nos permite entender tópicos especializados que han surgido en los últimos años. ¿Qué alimentos son los preferidos por el ecuatoriano? ¿Las familias de la Sierra consumen distinto que las de la Costa? ¿Qué provincias gastan más en alcohol y estupefacientes? ¿Qué tanto gastan los hogares en salud? Y mucho más. 
 
-A continuación, reviso, de forma algo superficial, los patrones más interesantes de la ENIGHUR. 
+En este artículo cubro los patrones mas notables de la ENIGHUR, dando luz a interesantes detalles sobre la sociedad ecuatoriana.
 
 # El hogar ecuatoriano promedio gana $889 y gasta el 77% de ese ingreso
 
-La encuesta nos informa que, durante 2025^[El periodo de recolección de datos de la encuesta fue de diciembre de 2024 a noviembre de 2025.], el promedio del ingreso **monetario** de los hogares fue de $889^[INEC reporta un ingreso más alto con la misma encuesta, puesto que se consideran ingresos no monetarios mediante estimaciones del valor de dichos ingresos en especie]. Este promedio es un poco más optimista que el de la ENEMDU, dependiendo de cómo se lo calcule. Ya que la ENIGHUR es una encuesta optimizada tanto para medir el ingreso como el gasto, el valor de $889 es la mejor estimación disponible para este periodo. 
+La encuesta nos informa que, durante 2025^[El periodo de recolección de datos de la encuesta fue de diciembre de 2024 a noviembre de 2025.], el promedio del ingreso **monetario** de los hogares fue de $889^[INEC reporta un ingreso más alto con la misma encuesta, puesto que se consideran ingresos no monetarios mediante estimaciones del valor de dichos ingresos en especie]. Este promedio es un poco más optimista que el de la ENEMDU, dependiendo de cómo se lo calcule^[Ya que la ENIGHUR es una encuesta optimizada tanto para medir el ingreso como el gasto, el valor de $889 es la mejor estimación disponible para este periodo.]
 
 El gráfico de abajo muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo": alimentos, vivienda, entre otros^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias ("regalos" monetarios) a otros hogares o instituciones.
 
 El componente que más les pesa a las familias es el gasto en alimentos y restaurantes: $202 en promedio, representando el 22.8% del ingreso y el 32% del gasto de consumo total. De acuerdo con la teoría económica (ley de Engel) y la investigación empírica, este alto porcentaje es muy común en países en vías de desarrollo. Como comparación, [los hogares canadienses](https://www150.statcan.gc.ca/n1/daily-quotidien/250521/dq250521a-eng.htm) dedicaron el 15.7% de sus gastos a comida.
 
-La vivienda y servicios representa un 7.8%, seguida de muebles y vestimenta. Estos valores, especialmente en dólares, pueden parecer relativamente bajos. Es importante recordar que estos valores promedian hogares rurales y urbanos, por lo que pueden parecer algo bajos, ya que los valores pequeños de los hogares rurales traen el promedio hacia abajo. 
+La vivienda y servicios representa un 7.8%, seguida de muebles y vestimenta. Estos valores, especialmente en dólares, pueden parecer relativamente bajos. Es importante recordar que aquí se promedian hogares rurales y urbanos, por lo que pueden verse algo reducidos, ya que los valores más pequeños de los hogares rurales empujan el promedio hacia abajo. 
 
-Los hogares no han cambiado mucho la forma en la que gastan (en terminso proporcionales). El componenet que mas ha cambiado es el de la Vivienda y servicios, que representa en 2025 una mayor importancia dentro del presupuesto del hogar (10.9% vs. 7.4% en 2012).
+Los hogares no han cambiado mucho la forma en la que gastan, al menos en términos proporcionales. El componente que más ha cambiado es el de vivienda y servicios, que en 2025 representa una mayor importancia dentro del presupuesto del hogar (10.9% frente a 7.4% en 2012).
 
-Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingresos y gastos es de $205, representando el 23.1% del ingreso. Cabe recalcar que la ENIGHUR no pregunta directamente sobre el ahorro; esta es una variable calculada por mí, restando los agregados y dividiendo para el número de hogares que la encuesta representa. Esta es una práctica común para el análisis de *proporciones*. Para entender mejor las tendencias de los valores en dólares, es mejor utilizar percentiles: el 50% de hogares solo ahorran hasta $69 mensuales. 
+Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingresos y gastos es de $205, representando el 23.1% del ingreso. Cabe recalcar que la ENIGHUR no pregunta directamente sobre el ahorro; esta es una variable calculada por mí, restando los agregados y dividiendo para el número de hogares que la encuesta representa. Esta es una práctica común para el análisis de *proporciones*. Para entender mejor las tendencias de los valores en dólares, es mejor utilizar percentiles: el 50% de hogares solo ahorran hasta $69 mensuales.
 
-<div style="width: 100%; max-width: 100%; margin: 1.5rem 0;">
-<iframe
-  src="../output/figures/sankey_ingresos_gastos_interactivo.html"
-  style="display: block; width: 100%; height: 980px; border: 0;"
-  loading="lazy"
-></iframe>
-</div>
+```{r}
+sankey_path <- file.path("..", "output", "figures", "sankey_ingresos_gastos_interactivo.html")
+sankey_html <- paste(readLines(sankey_path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+
+htmltools::tags$iframe(
+  srcdoc = sankey_html,
+  style = "display:block;width:100%;height:760px;border:none;margin:1.5rem 0;",
+  loading = "lazy"
+)
+```
 
 # La distribución del ingreso en 2025 es esencialmente la misma que en 2012
 
@@ -71,30 +74,96 @@ En la anterior sección, utilizo el ingreso promedio, y no la mediana u otros pe
 
 La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor, y el otro 50% gana más. Esto es solo unos pocos dólares más alto que la mediana del ingreso en 2012 ($614)^[Valor ajustado por inflación de 2012 a 2025], la última vez que se realizó la ENIGHUR. Generalmente, se espera que la economía progrese en esa cantidad de tiempo, pero desafortunadamente los datos muestran una sociedad estancada en ese nivel de ingreso. El gráfico de abajo detalla mejor la distribución del ingreso de los hogares en ambos años. 
 
-![](../output/figures/distribucion_ingreso_2012_2025.png)
+```{r, results='asis'}
+dist_path <- file.path("..", "output", "figures", "distribucion_ingreso_2012_2025.png")
+cat(
+  sprintf(
+    '<img src="%s" style="display:block;width:100%%;height:auto;" />',
+    knitr::image_uri(dist_path)
+  )
+)
+```
 
-Se hablo mucho en semanas pasadas de cuantos hogares ganan $1.500 dolares o mas. La ENIGHUR confirma, de manera fulminante, lo que tambien sugiere la ENEMDU: solo 14.7% de familias gana $1,500 o mas. El 90% de familias gana solo hasta $1.826. El 1%, representando a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o mas. En terminos de desigualdad, es decir, que tanto porcentaje de ingresos se llevan los diferentes grupos de la sociedad, el Ecuador tiene una puntuacion de 0.452 (coeficiente de Gini). En 12 anios, el valor ha mejorado marginalmente (0.466). Este valor es de los mas altos de Latinoamerica, superado solo por Nicaragua, Brazil, Panama y COLOMBIA, SEGUN el banco mundial [aqui](https://data.worldbank.org/indicator/SI.POV.GINI?locations=C6&most_recent_value_desc=true). 
+Se habló mucho en semanas pasadas de cuántos hogares ganan $1.500 dólares o más. La ENIGHUR confirma, de manera fulminante, lo que también sugiere la ENEMDU: solo 14.7% de familias gana $1,500 o más. El 90% de familias gana solo hasta $1.826. El 1%, que representa a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o más. En términos de desigualdad, es decir, de qué porcentaje de los ingresos se llevan los diferentes grupos de la sociedad, el Ecuador tiene una puntuación de 0.452 (coeficiente de Gini). En 12 años, el valor ha mejorado marginalmente desde 0.466. Este valor es de los más altos de Latinoamérica, superado solo por Nicaragua, Brasil, Panamá y Colombia, según el Banco Mundial [aquí](https://data.worldbank.org/indicator/SI.POV.GINI?locations=C6&most_recent_value_desc=true). 
 
 # Los hogares rurales ganan y gastan considerablemente menos
 
-Los hogares urbanos
+El gráfico a continuación muestra cómo se distribuyen los ingresos y gastos monetarios de los hogares, separando por zona rural y urbana. El hogar  
+rural tiene una mediana de ingreso de $430, 270 dólares más baja que la de los hogares urbanos ($700). Por el lado del gasto, la mediana del gasto monetario total es de $356.7 en los hogares rurales, frente a $580.3 en los hogares urbanos, una brecha  
+de 223.6 dólares. 
 
-Un detalle a notar es que el ingreso por agricultura toma muchisima mas importancia en los hogares rurales, representando, en promedio, el 10.7% de los ingresos rurales. En la zona urbana, el mismo no llega al 1%. 
+```{r, results='asis'}
+dist_urb_rural_path <- file.path("..", "output", "figures", "distribucion_ingreso_gasto_nacional_rural_2025.png")
+cat(
+  sprintf(
+    '<img src="%s" style="display:block;width:100%%;height:auto;" />',
+    knitr::image_uri(dist_urb_rural_path)
+  )
+)
+```
 
-# Los hogares mas ricos... 
+Un detalle es que el ingreso por agricultura toma muchísima más importancia en los hogares rurales, representando, en promedio, el 10.7% de sus ingresos. En la zona urbana, esa proporción no llega al 1%. En términos de componentes del gasto, las diferencias más marcadas aparecen en Alimentos y restaurantes (mediana de $192.0 en el área urbana  frente a $123.4 en la rural), Otros ($81.6 frente a $52.0), Vivienda y servicios ($46.0 frente a $17.0) y Transporte ($38.6 frente a $29.1).
 
-# La provincia mas cara para vivir es xxxx
+# Entre los hogares más pobres y más ricos cambia toda la canasta de consumo
 
-# Las familias de xxxx gastan mas en estupefacientes
+El siguiente gráfico ordena a los hogares según quintiles de ingreso y muestra cómo cambia la distribución del gasto monetario total. Como era de esperar, el gasto crece de manera sostenida al pasar de los hogares más pobres a los hogares más ricos.
 
-# El gasto en salud...
+```{r, results='asis'}
+dist_quintiles_path <- file.path("..", "output", "figures", "gasto_total_por_quintil_ingreso_2025.png")
+cat(
+  sprintf(
+    '<img src="%s" style="display:block;width:100%%;height:auto;" />',
+    knitr::image_uri(dist_quintiles_path)
+  )
+)
+```
 
-edad vs. gto salud scatterplot. 
+Pero el contraste entre los hogares más pobres y los más ricos no es solo de nivel, sino también de composición. Entre los hogares más pobres, el margen de gasto es muy estrecho y la canasta está mucho más comprimida: la mediana mensual en `Alimentos y restaurantes` es de apenas `$71`, en `Vivienda y servicios` de `$15`, en `Transporte` de `$6` y en `Salud` de `$6`. En `Recreación y educación`, la mediana entre los hogares más pobres es directamente `$0`, lo que sugiere que para una gran parte de estos hogares ese tipo de gasto simplemente no entra en el presupuesto usual.
 
-# La ciudad... 
+Entre los hogares más ricos, en cambio, todas las partidas se expanden con fuerza. La mediana mensual sube a `$309` en `Alimentos y restaurantes`, `$69` en `Vivienda y servicios`, `$129` en `Transporte`, `$54` en `Salud` y `$64` en `Recreación y educación`. Este último contraste es particularmente revelador: mientras en los hogares más pobres ese rubro casi desaparece, en los más ricos se convierte en un componente regular del gasto. También crece con fuerza la categoría `Otros`, que pasa de una mediana de `$25` entre los hogares más pobres a `$175` entre los más ricos, reflejando una canasta bastante más diversificada.
 
-# gasolina
+Este patrón es consistente con lo que encuentra la literatura internacional. El [Banco Mundial](https://datatopics.worldbank.org/consumption/market) documenta que, conforme aumenta el gasto total, la participación de alimentos y bebidas tiende a bajar, mientras que transporte gana peso; y en una nota del [Programa de Comparación Internacional](https://www.worldbank.org/en/programs/icp/brief/VC_Ch5_2) recuerda que este es precisamente el patrón descrito por la ley de Engel. La implicación para inflación es importante: no todas las familias enfrentan la misma “inflación efectiva”. Un trabajo del [Fondo Monetario Internacional](https://www.imf.org/-/media/files/publications/wp/2023/english/wpiea2023074-print-pdf.pdf) muestra que aumentos en precios de alimentos afectan de forma desproporcionada a hogares de menores ingresos, porque esos rubros ocupan una parte mayor de su canasta y porque, ante esos choques, suelen recortar cantidad o calidad de alimentos y también gasto en salud y educación. Por eso, cuando suben más rápido los precios de bienes esenciales, la presión real sobre las familias más pobres suele ser mayor que la que sugiere la inflación promedio.
 
-# la costa come x, la sierra come y. 
+Los hogares de mayores ingresos además están ubicados de manera muy poco uniforme en el territorio. Casi `89%` de los hogares del quintil más alto se encuentran en zonas urbanas. A nivel provincial, `Pichincha` concentra cerca de `29%` de esos hogares y `Guayas` alrededor de `24%`, muy por encima del resto. Es decir, la geografía del ingreso alto en Ecuador es, sobre todo, urbana y fuertemente concentrada en las dos provincias más grandes del país.
 
-# el ahorro
+# Galápagos es la provincia donde más gastan los hogares
+
+Si se compara la mediana del gasto corriente total del hogar entre provincias, `Galápagos` aparece claramente en primer lugar. La mediana provincial llega a `$1,632`, más del doble de la mediana nacional de `$737`. Después vienen `Azuay` (`$873`) y `Pichincha` (`$860`), bastante por encima del promedio del país.
+
+```{r, results='asis'}
+gasto_provincia_path <- file.path("..", "output", "figures", "gasto_total_mediano_provincia_2025.png")
+cat(
+  sprintf(
+    '<img src="%s" style="display:block;width:100%%;height:auto;" />',
+    knitr::image_uri(gasto_provincia_path)
+  )
+)
+```
+
+En `Galápagos`, la mediana de `Alimentos y restaurantes` llega a `$395`, frente a `$173` a nivel nacional; `Vivienda y servicios` sube a `$87`, frente a `$36`; y la categoría `Otros` alcanza `$159`, frente a `$73`. Es decir, la canasta es más cara de manera bastante generalizada. `Pichincha` también destaca por una mediana relativamente alta en `Vivienda y servicios` (`$66`) y `Transporte` (`$51`), mientras que `Guayas` resalta más por `Alimentos y restaurantes` (`$207`) que por vivienda. `Azuay`, por su parte, aparece alto en casi todos los rubros principales. 
+
+La distancia entre Galápagos y el resto sirve para recordar que el costo de vida no es homogéneo dentro del país. La ENIGHUR nos permite observar esta informacion por primera vez en muchos anios, puesto que el indice de precios espacial de galapagos no se ha realizado en 10 anios. Si bien el gasto no es igual que el precio (puesto que Gasto = Precio X Cantidad), es la mejor medida disponible para entender los costos de vida en el Ecuador por el momento. 
+
+Las diferencias territoriales son importantes, considerando que las medianas aqui propuestas proveen una vision mucho mas especifica - la mediana ecuatoriana cuenta una historia muy diferente a la de la mediana de Pichincha, por ejemplo. 
+
+# Las familias de xxxx gastan más en estupefacientes
+
+# La Costa come x, la Sierra come y. 
+
+# La gasolina es, sobre todo, un gasto de hogares de mayores ingresos
+
+La gasolina está mucho más concentrada en los hogares de mayores ingresos que otros componentes del gasto. A nivel nacional, el gasto mensual promedio en gasolina es de `$20.5` por hogar, pero la mediana es `0`, lo que quiere decir que más de la mitad de hogares no registra este gasto en un mes típico. Ese rubro representa alrededor de `3.0%` del gasto monetario corriente nacional. Entre los hogares más pobres, el gasto promedio apenas llega a `$2.8` al mes, solo `8.8%` reporta alguna compra de gasolina y su peso dentro del gasto monetario corriente baja a `1.4%`. Entre los hogares más ricos, en cambio, el promedio sube a `$55.7`, `60.8%` de hogares sí registra este gasto y su participación sube a `3.7%`.
+
+```{r, results='asis'}
+gasolina_quintiles_path <- file.path("..", "output", "figures", "gasolina_promedio_por_quintil_2025.png")
+cat(
+  sprintf(
+    '<img src="%s" style="display:block;width:100%%;height:auto;" />',
+    knitr::image_uri(gasolina_quintiles_path)
+  )
+)
+```
+
+Esto no significa necesariamente que los hogares pobres no usen transporte, sino que la gasolina para vehículo particular está mucho menos extendida en su canasta. Incluso entre quienes sí gastan en gasolina, las diferencias siguen siendo grandes: la mediana entre los hogares compradores es de `$23.2` entre los hogares más pobres y de `$85.8` entre los más ricos. Además, este patrón vuelve a ser marcadamente urbano: cerca de `89%` de los hogares del grupo de mayores ingresos están en ciudades, y solo `10.6%` en zonas rurales. A nivel provincial, `Pichincha` y `Guayas` concentran por sí solas algo más de la mitad de los hogares de mayores ingresos del país.
+
+# Conclusiones: y ahora que?

@@ -39,6 +39,16 @@ rdata_path_2025 <- resolve_existing_path(
 
 load(rdata_path_2025)
 
+gasolina_hmo_2025 <- ENIGHUR2025_GASTOS_HMO |>
+  transmute(
+    Identif_hog,
+    gasolina_mon = rowSums(cbind(
+      as.numeric(c7222001),
+      as.numeric(c7222003),
+      as.numeric(c7222005)
+    ), na.rm = TRUE)
+  )
+
 # Use INEC's pre-computed ing_mon_cor directly (includes net agricultural income).
 # 2012 is now also computed with net agricultural income — both years comparable.
 ingresos_2025 <- ENIGHUR2025_HOGARES_AGREGADOS |>
@@ -297,7 +307,413 @@ log_plot <- combined |>
   ) +
   theme_quantificador_legend()
 
+# ==============================================================================
+# 2025 income vs expenditure — urban vs rural weighted box summaries
+# ==============================================================================
+
+dist_2025_base <- ENIGHUR2025_HOGARES_AGREGADOS |>
+  transmute(
+    Identif_hog,
+    fexp = as.numeric(Fexp),
+    area = ifelse(AREA == 1, "Urbana", "Rural"),
+    `Ingreso monetario` = as.numeric(ing_mon_cor),
+    `Gasto monetario total` = as.numeric(gas_mon_cor)
+  ) |>
+  left_join(gasolina_hmo_2025, by = "Identif_hog") |>
+  mutate(gasolina_mon = coalesce(as.numeric(gasolina_mon), 0))
+
+dist_2025_chart <- bind_rows(
+  dist_2025_base |>
+    transmute(fexp, area, indicador = "Ingreso monetario", valor = .data$`Ingreso monetario`),
+  dist_2025_base |>
+    transmute(fexp, area, indicador = "Gasto monetario total", valor = .data$`Gasto monetario total`)
+) |>
+  filter(!is.na(valor), valor > 0)
+
+weighted_box <- function(x, w) {
+  c(
+    ymin = wtd_quantile(x, w, 0.05),
+    lower = wtd_quantile(x, w, 0.25),
+    middle = wtd_quantile(x, w, 0.50),
+    upper = wtd_quantile(x, w, 0.75),
+    ymax = wtd_quantile(x, w, 0.95)
+  )
+}
+
+box_summary_2025 <- dist_2025_chart |>
+  group_by(indicador, area) |>
+  reframe(
+    ymin = wtd_quantile(valor, fexp, 0.10),
+    lower = wtd_quantile(valor, fexp, 0.25),
+    middle = wtd_quantile(valor, fexp, 0.50),
+    upper = wtd_quantile(valor, fexp, 0.75),
+    ymax = wtd_quantile(valor, fexp, 0.90)
+  ) |>
+  mutate(
+    indicador = factor(indicador, levels = c("Ingreso monetario", "Gasto monetario total")),
+    area = factor(area, levels = c("Urbana", "Rural")),
+    mediana_lbl = paste0("$", formatC(round(middle), format = "d", big.mark = ","))
+  )
+
+dist_2025_plot <- ggplot(
+  box_summary_2025,
+  aes(x = indicador, fill = area, colour = area)
+) +
+  geom_boxplot(
+    aes(
+      ymin = ymin,
+      lower = lower,
+      middle = middle,
+      upper = upper,
+      ymax = ymax
+    ),
+    stat = "identity",
+    position = position_dodge2(width = 0.72, preserve = "single"),
+    width = 0.56,
+    alpha = 0.55,
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(y = middle, label = mediana_lbl, group = area),
+    position = position_dodge2(width = 0.72, preserve = "single"),
+    vjust = -0.9,
+    size = 2.9,
+    colour = "grey20"
+  ) +
+  scale_fill_manual(
+    name = NULL,
+    values = c(
+      "Urbana" = "#2D6A9F",
+      "Rural" = "#D4691E"
+    )
+  ) +
+  scale_colour_manual(
+    name = NULL,
+    values = c(
+      "Urbana" = "#1A3A5C",
+      "Rural" = "#A8400A"
+    )
+  ) +
+  guides(
+    fill = guide_legend(override.aes = list(colour = NA, linewidth = 0)),
+    colour = "none"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_dollar(prefix = "$", big.mark = ","),
+    expand = expansion(mult = c(0.03, 0.14))
+  ) +
+  labs(
+    title = "Los hogares urbanos ganan y gastan más",
+    subtitle = "Ingresos y gastos monetarios totales, por zona, ENIGHUR 2024-2025",
+    x = NULL,
+    y = "USD mensuales por hogar",
+    caption = paste0(
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
+      "Nota: Las cajas resumen la distribución ponderada de hogares. La línea central marca la mediana; ",
+      "la caja va del percentil 25 al 75; y los bigotes muestran los percentiles 10 y 90. ",
+      "Se implementan percentiles ponderados por pesos muestrales."
+    )
+  ) +
+  theme_quantificador_legend(legend.position = c(0.83, 0.83)) +
+  theme(
+    axis.text.x = element_text(size = 8, colour = "grey20"),
+    axis.title.y = element_text(size = 9, hjust = 0.5),
+    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.2,
+                                margin = margin(t = 6))
+  )
+
+income_quintile_breaks_2025 <- vapply(c(0.20, 0.40, 0.60, 0.80), function(p) {
+  wtd_quantile(dist_2025_base$`Ingreso monetario`, dist_2025_base$fexp, p)
+}, numeric(1))
+
+dist_2025_base$quintil_ingreso <- cut(
+  dist_2025_base$`Ingreso monetario`,
+  breaks = c(-Inf, income_quintile_breaks_2025, Inf),
+  labels = c("Q1", "Q2", "Q3", "Q4", "Q5"),
+  right = TRUE,
+  include.lowest = TRUE
+)
+
+gasto_quintiles_chart <- bind_rows(
+  transmute(
+    dist_2025_base,
+    grupo = "Nacional",
+    valor = .data$`Gasto monetario total`,
+    fexp
+  ),
+  transmute(
+    dist_2025_base,
+    grupo = as.character(quintil_ingreso),
+    valor = .data$`Gasto monetario total`,
+    fexp
+  )
+) |>
+  filter(!is.na(grupo), !is.na(valor), valor > 0)
+
+gasto_quintiles_summary <- gasto_quintiles_chart |>
+  group_by(grupo) |>
+  reframe(
+    ymin = wtd_quantile(valor, fexp, 0.10),
+    lower = wtd_quantile(valor, fexp, 0.25),
+    middle = wtd_quantile(valor, fexp, 0.50),
+    upper = wtd_quantile(valor, fexp, 0.75),
+    ymax = wtd_quantile(valor, fexp, 0.90)
+  ) |>
+  mutate(
+    grupo = factor(grupo, levels = c("Nacional", "Q1", "Q2", "Q3", "Q4", "Q5")),
+    mediana_lbl = paste0("$", formatC(round(middle), format = "d", big.mark = ","))
+  )
+
+quintile_axis_labels <- c(
+  "Nacional" = "Nacional",
+  "Q1" = "Q1 (más pobre)",
+  "Q2" = "Q2",
+  "Q3" = "Q3",
+  "Q4" = "Q4",
+  "Q5" = "Q5 (más rico)"
+)
+
+gasto_quintiles_plot <- ggplot(
+  gasto_quintiles_summary,
+  aes(y = grupo, fill = grupo, colour = grupo)
+) +
+  geom_boxplot(
+    aes(
+      xmin = ymin,
+      xlower = lower,
+      xmiddle = middle,
+      xupper = upper,
+      xmax = ymax
+    ),
+    stat = "identity",
+    width = 0.62,
+    alpha = 0.6,
+    linewidth = 0.8
+  ) +
+  geom_text(
+    aes(x = middle, label = mediana_lbl),
+    hjust = -0.15,
+    size = 2.8,
+    colour = "grey20"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Nacional" = "#5C6B73",
+      "Q1" = "#D9E6F2",
+      "Q2" = "#B8D2E8",
+      "Q3" = "#8CBBD9",
+      "Q4" = "#5499C7",
+      "Q5" = "#1F618D"
+    )
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Nacional" = "#3B4348",
+      "Q1" = "#A7BED3",
+      "Q2" = "#7DA6C2",
+      "Q3" = "#5B8FB4",
+      "Q4" = "#2E6E98",
+      "Q5" = "#154360"
+    )
+  ) +
+  guides(fill = "none", colour = "none") +
+  scale_x_continuous(
+    labels = scales::label_dollar(prefix = "$", big.mark = ","),
+    breaks = scales::breaks_extended(n = 8),
+    expand = expansion(mult = c(0.03, 0.14))
+  ) +
+  scale_y_discrete(labels = quintile_axis_labels) +
+  labs(
+    title = "Los hogares más ricos gastan más",
+    subtitle = "Gasto monetario total del hogar, por quintil de ingreso, ENIGHUR 2024-2025",
+    x = "USD mensuales por hogar",
+    y = NULL,
+    caption = paste0(
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
+      "Nota: Los quintiles se construyen con el ingreso monetario del hogar; Q1 es el quintil más pobre y Q5 el más rico.\n",
+      "Las cajas resumen la distribución ponderada del gasto monetario total: la línea central marca la mediana;\n",
+      "la caja va del percentil 25 al 75; y los bigotes muestran los percentiles 10 y 90. ",
+      "Se implementan percentiles ponderados por pesos muestrales."
+    )
+  ) +
+  theme_quantificador() +
+  theme(
+    axis.text.x = element_text(size = 8, colour = "grey20"),
+    axis.text.y = element_text(size = 8, colour = "grey20"),
+    axis.title.x = element_text(size = 9, hjust = 0.5),
+    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
+                                margin = margin(t = 6))
+  )
+
+gasolina_quintiles_plot_data <- dist_2025_base |>
+  mutate(
+    grupo = factor(
+      as.character(quintil_ingreso),
+      levels = c("Q1", "Q2", "Q3", "Q4", "Q5"),
+      labels = c("Q1 (más pobre)", "Q2", "Q3", "Q4", "Q5 (más rico)")
+    )
+  ) |>
+  filter(!is.na(grupo)) |>
+  group_by(grupo) |>
+  summarise(
+    gasolina_promedio = sum(gasolina_mon * fexp, na.rm = TRUE) / sum(fexp, na.rm = TRUE),
+    share_gasto_monetario = sum(gasolina_mon * fexp, na.rm = TRUE) / sum(`Gasto monetario total` * fexp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  bind_rows(
+    dist_2025_base |>
+      filter(!is.na(`Ingreso monetario`), !is.na(`Gasto monetario total`)) |>
+      summarise(
+        grupo = factor("Nacional", levels = c("Nacional", "Q1 (más pobre)", "Q2", "Q3", "Q4", "Q5 (más rico)")),
+        gasolina_promedio = sum(gasolina_mon * fexp, na.rm = TRUE) / sum(fexp, na.rm = TRUE),
+        share_gasto_monetario = sum(gasolina_mon * fexp, na.rm = TRUE) / sum(`Gasto monetario total` * fexp, na.rm = TRUE)
+      )
+  ) |>
+  mutate(
+    grupo = factor(as.character(grupo), levels = c("Nacional", "Q1 (más pobre)", "Q2", "Q3", "Q4", "Q5 (más rico)"))
+  ) |>
+  arrange(grupo)
+
+gasolina_quintiles_plot <- ggplot(
+  gasolina_quintiles_plot_data,
+  aes(x = gasolina_promedio, y = grupo, fill = grupo)
+) +
+  geom_col(width = 0.62, alpha = 0.9, colour = NA) +
+  geom_text(
+    aes(label = paste0("$", formatC(round(gasolina_promedio, 1), format = "f", digits = 1), " | ", scales::percent(share_gasto_monetario, accuracy = 0.1))),
+    hjust = -0.1,
+    size = 2.7,
+    colour = "grey20"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Nacional" = "#5C6B73",
+      "Q1 (más pobre)" = "#D9E6F2",
+      "Q2" = "#B8D2E8",
+      "Q3" = "#8CBBD9",
+      "Q4" = "#5499C7",
+      "Q5 (más rico)" = "#1F618D"
+    )
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(
+    labels = scales::label_dollar(prefix = "$", big.mark = ","),
+    breaks = scales::breaks_extended(n = 7),
+    expand = expansion(mult = c(0, 0.12))
+  ) +
+  labs(
+    title = "El gasto en gasolina se concentra en los hogares de mayores ingresos",
+    subtitle = "Gasto mensual promedio en gasolina del hogar, por quintil de ingreso, ENIGHUR 2024-2025",
+    x = "USD mensuales por hogar",
+    y = NULL,
+    caption = paste0(
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
+      "Nota: Gasolina incluye eco país, extra y súper. Las etiquetas muestran el promedio mensual y su participación dentro del gasto monetario corriente. ",
+      "Los quintiles se construyen con el ingreso monetario del hogar."
+    )
+  ) +
+  theme_quantificador() +
+  theme(
+    axis.text.x = element_text(size = 8, colour = "grey20"),
+    axis.text.y = element_text(size = 8, colour = "grey20"),
+    axis.title.x = element_text(size = 9, hjust = 0.5),
+    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
+                                margin = margin(t = 6))
+  )
+
+province_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$PROVINCIA, "labels")
+
+province_spending_plot_data <- ENIGHUR2025_HOGARES_AGREGADOS |>
+  transmute(
+    provincia = names(province_labels)[match(as.numeric(PROVINCIA), unname(province_labels))],
+    fexp = as.numeric(Fexp),
+    gasto_corriente_total = as.numeric(gas_cor_tot)
+  ) |>
+  filter(!is.na(provincia), !is.na(gasto_corriente_total), gasto_corriente_total > 0) |>
+  group_by(provincia) |>
+  summarise(
+    mediana_gasto = wtd_quantile(gasto_corriente_total, fexp, 0.5),
+    .groups = "drop"
+  ) |>
+  arrange(desc(mediana_gasto)) |>
+  slice_head(n = 5) |>
+  mutate(
+    provincia = factor(provincia, levels = rev(provincia)),
+    destaque = case_when(
+      as.character(provincia) == "Galápagos" ~ "Galápagos",
+      TRUE ~ "Resto"
+    )
+  )
+
+national_median_spending <- wtd_quantile(
+  as.numeric(ENIGHUR2025_HOGARES_AGREGADOS$gas_cor_tot),
+  as.numeric(ENIGHUR2025_HOGARES_AGREGADOS$Fexp),
+  0.5
+)
+
+province_spending_plot <- ggplot(
+  province_spending_plot_data,
+  aes(x = mediana_gasto, y = provincia, fill = destaque)
+) +
+  geom_col(width = 0.68, colour = NA) +
+  geom_vline(
+    xintercept = national_median_spending,
+    linetype = "dashed",
+    linewidth = 0.7,
+    colour = "#495057"
+  ) +
+  annotate(
+    "text",
+    x = national_median_spending,
+    y = 1.1,
+    label = paste0("Mediana nacional: $", formatC(round(national_median_spending), format = "d", big.mark = ",")),
+    hjust = -0.05,
+    vjust = -0.3,
+    size = 2.8,
+    colour = "#495057"
+  ) +
+  geom_text(
+    aes(label = paste0("$", formatC(round(mediana_gasto), format = "d", big.mark = ","))),
+    hjust = -0.08,
+    size = 2.7,
+    colour = "grey20"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Galápagos" = "#C94040",
+      "Resto" = "#6FA8DC"
+    )
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(
+    labels = scales::label_dollar(prefix = "$", big.mark = ","),
+    breaks = scales::breaks_extended(n = 8),
+    expand = expansion(mult = c(0, 0.14))
+  ) +
+  labs(
+    title = "Galápagos es la provincia donde más gastan los hogares",
+    subtitle = "Top 5 provincias por mediana del gasto corriente total del hogar, ENIGHUR 2024-2025",
+    x = "USD mensuales por hogar",
+    y = NULL,
+    caption = paste0(
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
+      "Nota: El gráfico muestra medianas ponderadas del gasto corriente total del hogar por provincia."
+    )
+  ) +
+  theme_quantificador() +
+  theme(
+    axis.text.x = element_text(size = 8, colour = "grey20"),
+    axis.text.y = element_text(size = 8, colour = "grey20"),
+    axis.title.x = element_text(size = 9, hjust = 0.5),
+    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
+                                margin = margin(t = 6))
+  )
+
 dir.create("output/figures", showWarnings = FALSE, recursive = TRUE)
 save_figure("distribucion_ingreso_2012_2025.png", overlay_plot)
 save_figure("distribucion_ingreso_2012_2025_log.png", log_plot)
+save_figure("distribucion_ingreso_gasto_nacional_rural_2025.png", dist_2025_plot, width = 11, height = 7.5)
+save_figure("gasto_total_por_quintil_ingreso_2025.png", gasto_quintiles_plot, width = 8.4, height = 10.5)
+save_figure("gasolina_promedio_por_quintil_2025.png", gasolina_quintiles_plot, width = 8.4, height = 8.8)
+save_figure("gasto_total_mediano_provincia_2025.png", province_spending_plot, width = 8.8, height = 10.5)
 cat("Guardado: output/figures/\n")
