@@ -55,7 +55,7 @@ La vivienda y servicios representa un 7.8%, seguida de muebles y vestimenta. Est
 
 Los hogares no han cambiado mucho la forma en la que gastan (en terminso proporcionales). El componenet que mas ha cambiado es el de la Vivienda y servicios, que representa en 2025 una mayor importancia dentro del presupuesto del hogar (10.9% vs. 7.4% en 2012).
 
-Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingresos y gastos es de $205, representando el 23.1% del ingreso. Cabe recalcar que la ENIGHUR no pregunta directamente sobre el ahorro; esta es una variable calculada por mí, restando los agregados y dividiendo para el número de hogares que la encuesta representa. Esta es una práctica común para el análisis de *proporciones*. Para entender mejor las tendencias de los valores en dólares, es mejor utilizar percentiles, lo que haremos más abajo. 
+Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingresos y gastos es de $205, representando el 23.1% del ingreso. Cabe recalcar que la ENIGHUR no pregunta directamente sobre el ahorro; esta es una variable calculada por mí, restando los agregados y dividiendo para el número de hogares que la encuesta representa. Esta es una práctica común para el análisis de *proporciones*. Para entender mejor las tendencias de los valores en dólares, es mejor utilizar percentiles: el 50% de hogares solo ahorran hasta $69 mensuales. 
 
 <div style="width: 100%; max-width: 100%; margin: 1.5rem 0;">
 <iframe
@@ -65,7 +65,6 @@ Un detalle interesante es que, en promedio, el ahorro o diferencia entre ingreso
 ></iframe>
 </div>
 
-
 # La distribución del ingreso en 2025 es esencialmente la misma que en 2012
 
 En la anterior sección, utilizo el ingreso promedio, y no la mediana u otros percentiles, para poder reconciliar bien ingresos con gastos. Sin embargo, siempre es más informativo observar percentiles para entender mejor la distribución del ingreso, es decir, la "organización" de los ingresos de los hogares en el país. 
@@ -74,9 +73,7 @@ La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50
 
 ![](../output/figures/distribucion_ingreso_2012_2025.png)
 
-Se hablo mucho en semanas pasadas de cuantos hogares ganan $1.500 dolares o mas. La ENIGHUR confirma, de manera fulminante, resultados ENEMDU: solo 14.1% de familias gana $1,500 o mas. El 90% de familias gana solo hasta $1.826. El 1%, representando a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o mas. 
-
-En terminos de desigualdad, es decir, que tanto porcentaje de ingresos se llevan los diferentes grupos de la sociedad, el Ecuador tiene una puntuacion de 0.452 (coeficiente de Gini). En 12 anios, el valor ha mejorado marginalmente (0.466). UEste valor es de los mas altos de Latinoamerica, superado solo por Nicaragua, Brazil, Panama y COLOMBIA, SEGUN el banco mundial [aqui](https://data.worldbank.org/indicator/SI.POV.GINI?locations=C6&most_recent_value_desc=true). 
+Se hablo mucho en semanas pasadas de cuantos hogares ganan $1.500 dolares o mas. La ENIGHUR confirma, de manera fulminante, resultados ENEMDU: solo 14.1% de familias gana $1,500 o mas. El 90% de familias gana solo hasta $1.826. El 1%, representando a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o mas. En terminos de desigualdad, es decir, que tanto porcentaje de ingresos se llevan los diferentes grupos de la sociedad, el Ecuador tiene una puntuacion de 0.452 (coeficiente de Gini). En 12 anios, el valor ha mejorado marginalmente (0.466). Este valor es de los mas altos de Latinoamerica, superado solo por Nicaragua, Brazil, Panama y COLOMBIA, SEGUN el banco mundial [aqui](https://data.worldbank.org/indicator/SI.POV.GINI?locations=C6&most_recent_value_desc=true). 
 
 # Los hogares rurales ganan y gastan considerablemente menos
 

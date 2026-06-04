@@ -1,6 +1,6 @@
 source("scripts/packages.R")
 
-ensure_packages(c("openxlsx", "haven", "dplyr"))
+ensure_packages(c("openxlsx", "haven", "dplyr", "readxl"))
 
 options(scipen = 999)
 
@@ -196,6 +196,7 @@ load(rdata_path_2025)
 hogares <- ENIGHUR2025_HOGARES_AGREGADOS
 hogares$zona <- ifelse(hogares$AREA == 1, "Urbana", "Rural")
 hogares$fexp <- as.numeric(hogares$Fexp)
+hogares$ahorro_mon <- as.numeric(hogares$ing_mon_cor) - as.numeric(hogares$gas_mon_cor)
 province_labels <- attr(hogares$PROVINCIA, "labels")
 hogares$provincia_nombre <- names(province_labels)[match(as.numeric(hogares$PROVINCIA), unname(province_labels))]
 
@@ -387,6 +388,18 @@ gastos_hmo_path <- resolve_existing_path(
   "Dataset 2012 GASTOS_HMO"
 )
 
+gastos_htot_path <- resolve_existing_path(
+  c(
+    file.path("data", "enighur", "2012", "required", "ENIGHUR11_GASTOS_HTOT.sav"),
+    file.path(
+      "data", "enighur", "2012",
+      "bbd_ingresos_gastos_2011-2012", "2011-2012", "Ingresos_Gastos",
+      "02 BASE DE DATOS", "02 TABLAS DE TRABAJO", "07 ENIGHUR11_GASTOS_HTOT.sav"
+    )
+  ),
+  "Dataset 2012 GASTOS_HTOT"
+)
+
 gas_ag_2012 <- haven::read_sav(gastos_hmo_path) |>
   dplyr::mutate(gas_ag = rowSums(cbind(c1703097, c1704097, c1705097, c1706097), na.rm = TRUE)) |>
   dplyr::select(Identif_hog, gas_ag)
@@ -458,6 +471,110 @@ share_table <- dplyr::bind_rows(
 ) |>
   dplyr::arrange(.data$encuesta, .data$nivel, dplyr::desc(.data$share_total))
 
+# ============================================================
+# Ahorro (savings) by zone — household level for BOTH surveys
+# 2025: ing_mon_cor - gas_mon_cor (monetary current income minus monetary spending)
+# 2012: ing_mon_cor - sum(d1-d12) from GASTOS_HMO subclass totals (monetary consumption)
+#       Both deflated to 2024-2025 prices.
+# ============================================================
+
+deflator_2012 <- 113.6774 / 90.0032
+
+make_ahorro_row <- function(encuesta_label, zona_label, subset_data) {
+  data.frame(
+    encuesta      = encuesta_label,
+    zona          = zona_label,
+    media_ahorro  = weighted_total(subset_data$ahorro_mon, subset_data$fexp) /
+      sum(subset_data$fexp, na.rm = TRUE),
+    mediana_ahorro = weighted_quantile(subset_data$ahorro_mon, subset_data$fexp, 0.5),
+    stringsAsFactors = FALSE
+  )
+}
+
+ahorro_2025 <- dplyr::bind_rows(
+  make_ahorro_row("ENIGHUR 2024-2025", "Total",  hogares),
+  make_ahorro_row("ENIGHUR 2024-2025", "Urbana", hogares[hogares$zona == "Urbana", , drop = FALSE]),
+  make_ahorro_row("ENIGHUR 2024-2025", "Rural",  hogares[hogares$zona == "Rural",  , drop = FALSE])
+)
+
+# 2012: sum individual spending items from GASTOS_HTOT (the compiled total-spending file).
+# Variables ending in "00" are zero-filled SPSS compute placeholders — skip them.
+# Individual items end in 01-99, 97, 98, 99, etc.
+# Single-digit divisions (1-9) → 7-char variable names; two-digit (10-12) → 8-char.
+col_names_htot <- names(haven::read_sav(gastos_htot_path, n_max = 0))
+
+div_spend_vars <- unlist(lapply(1:12, function(div) {
+  pref <- paste0("c", div)
+  len  <- if (div < 10) 7L else 8L
+  col_names_htot[nchar(col_names_htot) == len &
+                   startsWith(col_names_htot, pref) &
+                   !grepl("00$", col_names_htot)]
+}))
+
+gastos_htot_spend <- haven::read_sav(
+  gastos_htot_path,
+  col_select = c("Identif_hog", tidyselect::all_of(div_spend_vars))
+)
+gastos_htot_spend$gas_cor_2012 <- rowSums(
+  as.data.frame(gastos_htot_spend[, div_spend_vars, drop = FALSE]),
+  na.rm = TRUE
+)
+gastos_2012_hh <- gastos_htot_spend[, c("Identif_hog", "gas_cor_2012")]
+rm(gastos_htot_spend)
+
+# Re-compute 2012 income keeping Identif_hog and zone variable (Área).
+ingresos_2012_zona <- haven::read_sav(data_path_2012) |>
+  dplyr::left_join(gas_ag_2012, by = "Identif_hog") |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ ifelse(!is.na(.) & . < 0, 0, .))) |>
+  dplyr::mutate(
+    suel_sal_bruto   = rowSums(cbind(i1401001,i1401002,i1401003,i1401004,i1401005,i1401006,
+                                     i1401007,i1401008,i1401009,i1401010,i1401011,i1401012,
+                                     i1401013,i1401014,i1401015,i1401016,i1401017,i1401018), na.rm=TRUE),
+    ded_asal         = rowSums(cbind(i1701001, i1701002), na.rm=TRUE),
+    ing_otro_neto    = rowSums(cbind(i1404001,i1404002,i1404003,i1404005,i1404006), na.rm=TRUE),
+    ing_asal_mon_net = pmax(suel_sal_bruto - ded_asal + ing_otro_neto, 0),
+    ing_cuent_prop_na = dplyr::coalesce(as.numeric(i1407099), 0),
+    ag_rev           = rowSums(cbind(i1408097,i1409097,i1416097,i1421097,
+                                     i1424097,i1428097,i1431097,i1436097), na.rm=TRUE),
+    gas_ag           = dplyr::coalesce(gas_ag, 0),
+    i1432097         = ifelse(ag_rev >= gas_ag, ag_rev, gas_ag),
+    ing_ag_mon_neto  = i1432097 - gas_ag,
+    ded_ind          = dplyr::coalesce(as.numeric(i1709002), 0),
+    ing_ind_mon_net  = pmax(ing_cuent_prop_na + ing_ag_mon_neto - ded_ind, 0),
+    ing_ter_ocu      = dplyr::coalesce(as.numeric(a1443001), 0),
+    ing_trab_mon     = ing_asal_mon_net + ing_ind_mon_net + ing_ter_ocu,
+    ing_ren_prop     = rowSums(cbind(dplyr::na_if(i1445004,0), dplyr::na_if(i1445006,0),
+                                     dplyr::na_if(i1445007,0)), na.rm=TRUE),
+    ing_cap          = rowSums(cbind(dplyr::na_if(i1445001,0), dplyr::na_if(i1445002,0),
+                                     dplyr::na_if(i1445003,0), dplyr::na_if(i1445005,0)), na.rm=TRUE),
+    ing_ren_prop_cap = ing_ren_prop + ing_cap,
+    tranf_cor        = rowSums(cbind(i1444001,i1444002,i1444003,i1444004,
+                                     i1444005,i1444006,i1444007), na.rm=TRUE),
+    otro_ing_cor     = dplyr::coalesce(as.numeric(b1443001), 0),
+    ing_mon_cor      = ing_trab_mon + ing_ren_prop_cap + tranf_cor + otro_ing_cor
+  ) |>
+  dplyr::transmute(
+    Identif_hog = .data$Identif_hog,
+    fexp        = as.numeric(.data$Fexp_cen2010),
+    zona        = ifelse(as.numeric(.data$`Área`) == 1, "Urbana", "Rural"),
+    ing_mon_cor = as.numeric(.data$ing_mon_cor) * deflator_2012
+  )
+
+ahorro_2012_hh <- ingresos_2012_zona |>
+  dplyr::left_join(gastos_2012_hh, by = "Identif_hog") |>
+  dplyr::mutate(
+    ahorro_mon = .data$ing_mon_cor - as.numeric(.data$gas_cor_2012) * deflator_2012
+  ) |>
+  dplyr::filter(!is.na(.data$ahorro_mon))
+
+ahorro_2012 <- dplyr::bind_rows(
+  make_ahorro_row("ENIGHUR 2011-2012 (precios 2024-2025)", "Total",  ahorro_2012_hh),
+  make_ahorro_row("ENIGHUR 2011-2012 (precios 2024-2025)", "Urbana", ahorro_2012_hh[ahorro_2012_hh$zona == "Urbana", , drop = FALSE]),
+  make_ahorro_row("ENIGHUR 2011-2012 (precios 2024-2025)", "Rural",  ahorro_2012_hh[ahorro_2012_hh$zona == "Rural",  , drop = FALSE])
+)
+
+ahorro_table <- dplyr::bind_rows(ahorro_2025, ahorro_2012)
+
 income_percentiles <- dplyr::bind_rows(
   data.frame(
     encuesta = "ENIGHUR 2011-2012 ajustada a precios 2024-2025",
@@ -480,7 +597,9 @@ notes_table <- data.frame(
     "statistic",
     "coverage",
     "share_definition",
-    "agricultural_income_definition"
+    "agricultural_income_definition",
+    "ahorro_definition_2025",
+    "ahorro_definition_2012"
   ),
   detail = c(
     "ENIGHUR 2024-2025 household working base.",
@@ -488,7 +607,9 @@ notes_table <- data.frame(
     "All values are weighted medians using the household expansion factor.",
     "Includes total current expenditure and the 13 main expenditure components.",
     "Expenditure shares are weighted totals divided by the sum of the 13 original ENIGHUR consumption components. For 2024-2025, urban and rural shares are also shown.",
-    "Ingreso no agricola is defined here as ingreso monetario total minus ingreso agricola neto."
+    "Ingreso no agricola is defined here as ingreso monetario total minus ingreso agricola neto.",
+    "ENIGHUR 2024-2025 savings: monetary savings = ing_mon_cor - gas_mon_cor (monetary current income minus monetary current spending). Weighted mean and median at household level.",
+    "ENIGHUR 2011-2012 savings: reconstructed monetary ing_mon_cor (INEC SPSS syntax) minus total purchases from GASTOS_HTOT (all survey instruments: daily diaries + monthly + quarterly + annual). HTOT individual items identified by variable-name length (7 chars divs 1-9, 8 chars divs 10-12) excluding zero-filled SPSS subtotals (vars ending in '00'). HTOT national weighted mean ≈ $788/month nominal (97% of TABULADOS $809). Both deflated to 2024-2025 prices (IPC 1.2631). Negative savings in 2012 reflect that monetary income (~$708/month nominal) was less than total market purchases (~$788/month nominal); the gap was financed by non-monetary income (own agricultural production, imputed housing, etc.) not captured in ing_mon_cor. Weighted mean and median at household level."
   ),
   stringsAsFactors = FALSE
 )
@@ -526,6 +647,9 @@ openxlsx::addStyle(
   wb, "ingreso_agricola", openxlsx::createStyle(numFmt = "0.0%"),
   rows = 2:(nrow(ingreso_agricola_table) + 1), cols = 5, gridExpand = TRUE, stack = TRUE
 )
+
+openxlsx::addWorksheet(wb, "ahorro")
+apply_sheet_style(wb, "ahorro", ahorro_table, currency_cols = 3:4)
 
 openxlsx::addWorksheet(wb, "notes")
 apply_sheet_style(wb, "notes", notes_table)
