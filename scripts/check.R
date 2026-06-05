@@ -45,7 +45,7 @@ required_files <- c(
   "scripts/01_ingresos_hogares.R",
   "scripts/packages.R",
   "scripts/utils.R",
-  "reporte.qmd",
+  file.path("report", "report.qmd"),
   rdata_2025_path
 )
 

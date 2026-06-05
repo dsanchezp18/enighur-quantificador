@@ -3,7 +3,7 @@
 ## Scope
 
 - Treat this repo as a small R/Quarto project with a large local data cache.
-- Prefer targeted reads of `scripts/*.R`, `reporte.qmd`, and `README.md`.
+- Prefer targeted reads of `scripts/*.R`, `report/report.qmd`, and `README.md`.
 - Do not recurse into `data/` or `output/` unless the task explicitly requires it.
 
 ## High-cost Paths
@@ -15,7 +15,7 @@
 
 - Fast smoke check: `Rscript scripts/check.R`
 - Main analysis run: `Rscript scripts/01_ingresos_hogares.R`
-- Quarto render: `quarto render reporte.qmd`
+- Quarto render: `quarto render report/report.qmd`
 
 ## Working Rules
 
@@ -30,4 +30,4 @@
 - `scripts/utils.R`: shared plotting helpers.
 - `scripts/packages.R`: package loading checks.
 - `scripts/check.R`: cheap verification entrypoint that does not load the large datasets.
-- `reporte.qmd`: report outline and Quarto entrypoint.
+- `report/report.qmd`: report outline and Quarto entrypoint.

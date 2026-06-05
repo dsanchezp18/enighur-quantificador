@@ -387,7 +387,7 @@ plot <- ggplot2::ggplot() +
   )
 
 save_figure(
-  "sankey_ingresos_gastos.png",
+  "sankey_ingresos_gastos_2025.png",
   plot = plot,
   width = 14,
   height = 8,

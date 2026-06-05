@@ -437,12 +437,6 @@ dist_2025_base$quintil_ingreso <- cut(
 gasto_quintiles_chart <- bind_rows(
   transmute(
     dist_2025_base,
-    grupo = "Nacional",
-    valor = .data$`Gasto monetario total`,
-    fexp
-  ),
-  transmute(
-    dist_2025_base,
     grupo = as.character(quintil_ingreso),
     valor = .data$`Gasto monetario total`,
     fexp
@@ -460,12 +454,11 @@ gasto_quintiles_summary <- gasto_quintiles_chart |>
     ymax = wtd_quantile(valor, fexp, 0.90)
   ) |>
   mutate(
-    grupo = factor(grupo, levels = c("Nacional", "Q1", "Q2", "Q3", "Q4", "Q5")),
+    grupo = factor(grupo, levels = c("Q1", "Q2", "Q3", "Q4", "Q5")),
     mediana_lbl = paste0("$", formatC(round(middle), format = "d", big.mark = ","))
   )
 
 quintile_axis_labels <- c(
-  "Nacional" = "Nacional",
   "Q1" = "Q1 (más pobre)",
   "Q2" = "Q2",
   "Q3" = "Q3",
@@ -665,10 +658,10 @@ province_spending_plot <- ggplot(
   annotate(
     "text",
     x = national_median_spending,
-    y = 1.1,
+    y = 0.55,
     label = paste0("Mediana nacional: $", formatC(round(national_median_spending), format = "d", big.mark = ",")),
-    hjust = -0.05,
-    vjust = -0.3,
+    hjust = -0.02,
+    vjust = 1,
     size = 2.8,
     colour = "#495057"
   ) +
@@ -709,11 +702,83 @@ province_spending_plot <- ggplot(
                                 margin = margin(t = 6))
   )
 
+region_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$REGION, "labels")
+
+regional_food_share_data <- ENIGHUR2025_HOGARES_AGREGADOS |>
+  transmute(
+    region = names(region_labels)[match(as.numeric(REGION), unname(region_labels))],
+    fexp = as.numeric(Fexp),
+    gasto_alimentos = as.numeric(d1),
+    gasto_monetario_total = as.numeric(gas_mon_cor)
+  ) |>
+  filter(region %in% c("Costa", "Sierra", "Amazonía/Oriente")) |>
+  group_by(region) |>
+  summarise(
+    gasto_alimentos_promedio = sum(gasto_alimentos * fexp, na.rm = TRUE) / sum(fexp, na.rm = TRUE),
+    share_gasto_alimentos = sum(gasto_alimentos * fexp, na.rm = TRUE) / sum(gasto_monetario_total * fexp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  mutate(
+    region = factor(region, levels = c("Costa", "Amazonía/Oriente", "Sierra")),
+    etiqueta = paste0(
+      scales::percent(share_gasto_alimentos, accuracy = 0.1),
+      " | $",
+      formatC(round(gasto_alimentos_promedio), format = "d", big.mark = ",")
+    )
+  )
+
+regional_food_share_plot <- ggplot(
+  regional_food_share_data,
+  aes(x = share_gasto_alimentos, y = region, fill = region)
+) +
+  geom_col(width = 0.62, alpha = 0.9, colour = NA) +
+  geom_text(
+    aes(label = etiqueta),
+    hjust = -0.08,
+    size = 2.9,
+    colour = "grey20"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Costa" = "#D4691E",
+      "Amazonía/Oriente" = "#4F772D",
+      "Sierra" = "#2D6A9F"
+    )
+  ) +
+  guides(fill = "none") +
+  scale_x_continuous(
+    labels = scales::label_percent(accuracy = 1),
+    breaks = scales::breaks_extended(n = 6),
+    expand = expansion(mult = c(0, 0.14))
+  ) +
+  labs(
+    title = "En la Costa, la comida pesa más dentro del presupuesto del hogar",
+    subtitle = "Participación de alimentos y bebidas no alcohólicas en el gasto monetario total del hogar",
+    x = "Porcentaje del gasto monetario total",
+    y = NULL,
+    caption = paste0(
+      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
+      "Nota: Comida incluye únicamente la división de alimentos y bebidas no alcohólicas. Las etiquetas muestran la participación y el gasto promedio mensual por hogar."
+    )
+  ) +
+  theme_quantificador() +
+  theme(
+    axis.text.x = element_text(size = 8, colour = "grey20"),
+    axis.text.y = element_text(size = 8, colour = "grey20"),
+    axis.title.x = element_text(size = 9, hjust = 0.5),
+    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
+                                margin = margin(t = 6))
+  )
+
 dir.create("output/figures", showWarnings = FALSE, recursive = TRUE)
-save_figure("distribucion_ingreso_2012_2025.png", overlay_plot)
-save_figure("distribucion_ingreso_2012_2025_log.png", log_plot)
-save_figure("distribucion_ingreso_gasto_nacional_rural_2025.png", dist_2025_plot, width = 11, height = 7.5)
-save_figure("gasto_total_por_quintil_ingreso_2025.png", gasto_quintiles_plot, width = 8.4, height = 10.5)
-save_figure("gasolina_promedio_por_quintil_2025.png", gasolina_quintiles_plot, width = 8.4, height = 8.8)
-save_figure("gasto_total_mediano_provincia_2025.png", province_spending_plot, width = 8.8, height = 10.5)
+social_width <- 10
+social_height <- 6.2
+
+save_figure("distribucion_ingreso_2012_2025.png", overlay_plot, width = social_width, height = social_height)
+save_figure("distribucion_ingreso_2012_2025_log.png", log_plot, width = social_width, height = social_height)
+save_figure("distribucion_ingreso_gasto_nacional_rural_2025.png", dist_2025_plot, width = social_width, height = social_height)
+save_figure("gasto_total_por_quintil_ingreso_2025.png", gasto_quintiles_plot, width = social_width, height = social_height)
+save_figure("gasolina_promedio_por_quintil_2025.png", gasolina_quintiles_plot, width = social_width, height = social_height)
+save_figure("gasto_total_mediano_provincia_2025.png", province_spending_plot, width = social_width, height = social_height)
+save_figure("share_gasto_alimentos_region_2025.png", regional_food_share_plot, width = social_width, height = social_height)
 cat("Guardado: output/figures/\n")
