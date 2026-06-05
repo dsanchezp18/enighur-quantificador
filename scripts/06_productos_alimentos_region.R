@@ -183,7 +183,7 @@ presence_plot <- ggplot(
   geom_tile(width = 0.92, height = 0.92, colour = "white", linewidth = 0.8) +
   geom_text(
     aes(label = .data$share_label, colour = .data$text_colour),
-    size = 3.1,
+    size = 4.2,
     fontface = "bold"
   ) +
   scale_fill_gradient(
@@ -207,8 +207,8 @@ presence_plot <- ggplot(
 save_figure(
   "productos_alimentos_mas_presentes_region_2025.png",
   presence_plot,
-  width = 11.25,
-  height = 7.1
+  width = 6.5,
+  height = 5.6
 )
 
 message("Saved figure: output/figures/productos_alimentos_mas_presentes_region_2025.png")

@@ -297,7 +297,7 @@ dist_2025_plot <- ggplot(
     aes(y = middle, label = mediana_lbl, group = area),
     position = position_dodge2(width = 0.72, preserve = "single"),
     vjust = -0.9,
-    size = 2.9,
+    size = 4.2,
     colour = "grey20"
   ) +
   scale_fill_manual(
@@ -320,13 +320,17 @@ dist_2025_plot <- ggplot(
   ) +
   scale_y_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
-    expand = expansion(mult = c(0.03, 0.14))
+    expand = expansion(mult = c(0.03, 0.18))
   ) +
+  coord_cartesian(clip = "off") +
   labs(
     x = NULL,
     y = "Ingreso o gasto mensual por hogar"
   ) +
-  theme_quantificador_legend(legend.position = c(0.83, 0.83))
+  theme_quantificador_legend(legend.position = c(0.83, 0.83)) +
+  theme(
+    plot.margin = margin(12, 18, 8, 12)
+  )
 
 income_quintile_breaks_2025 <- vapply(c(0.20, 0.40, 0.60, 0.80), function(p) {
   wtd_quantile(dist_2025_base$`Ingreso monetario`, dist_2025_base$fexp, p)
@@ -392,7 +396,7 @@ gasto_quintiles_plot <- ggplot(
   geom_text(
     aes(y = middle, label = mediana_lbl),
     vjust = -0.45,
-    size = 2.8,
+    size = 4.2,
     colour = "grey20"
   ) +
   scale_fill_manual(
@@ -420,13 +424,17 @@ gasto_quintiles_plot <- ggplot(
   scale_y_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
     breaks = scales::breaks_extended(n = 8),
-    expand = expansion(mult = c(0.03, 0.16))
+    expand = expansion(mult = c(0.03, 0.22))
   ) +
+  coord_cartesian(clip = "off") +
   labs(
     x = "Quintiles de ingreso",
     y = "Gasto monetario total mensual por hogar"
   ) +
-  theme_quantificador()
+  theme_quantificador() +
+  theme(
+    plot.margin = margin(14, 16, 8, 12)
+  )
 
 gasolina_quintiles_plot_data <- dist_2025_base |>
   mutate(
@@ -465,7 +473,7 @@ gasolina_quintiles_plot <- ggplot(
   geom_text(
     aes(label = paste0("$", formatC(round(gasolina_promedio, 1), format = "f", digits = 1), " | ", scales::percent(share_gasto_monetario, accuracy = 0.1))),
     hjust = -0.1,
-    size = 2.7,
+    size = 4.2,
     colour = "grey20"
   ) +
   scale_fill_manual(
@@ -482,13 +490,17 @@ gasolina_quintiles_plot <- ggplot(
   scale_x_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
     breaks = scales::breaks_extended(n = 7),
-    expand = expansion(mult = c(0, 0.12))
+    expand = expansion(mult = c(0, 0.32))
   ) +
+  coord_cartesian(clip = "off") +
   labs(
     x = "Gasto mensual promedio en gasolina por hogar",
     y = "Quintiles de ingreso"
   ) +
-  theme_quantificador()
+  theme_quantificador() +
+  theme(
+    plot.margin = margin(8, 42, 8, 12)
+  )
 
 province_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$PROVINCIA, "labels")
 
@@ -538,13 +550,13 @@ province_spending_plot <- ggplot(
     label = paste0("Mediana nacional: $", formatC(round(national_median_spending), format = "d", big.mark = ",")),
     hjust = -0.02,
     vjust = 1,
-    size = 2.8,
+    size = 4.2,
     colour = "#495057"
   ) +
   geom_text(
     aes(label = paste0("$", formatC(round(mediana_gasto), format = "d", big.mark = ","))),
     hjust = -0.08,
-    size = 2.7,
+    size = 4.2,
     colour = "grey20"
   ) +
   scale_fill_manual(
@@ -557,13 +569,17 @@ province_spending_plot <- ggplot(
   scale_x_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
     breaks = scales::breaks_extended(n = 8),
-    expand = expansion(mult = c(0, 0.14))
+    expand = expansion(mult = c(0, 0.32))
   ) +
+  coord_cartesian(clip = "off") +
   labs(
     x = "Gasto corriente total mensual por hogar",
     y = NULL
   ) +
-  theme_quantificador()
+  theme_quantificador() +
+  theme(
+    plot.margin = margin(8, 42, 8, 12)
+  )
 
 region_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$REGION, "labels")
 
@@ -598,7 +614,7 @@ regional_food_share_plot <- ggplot(
   geom_text(
     aes(label = etiqueta),
     hjust = -0.08,
-    size = 2.9,
+    size = 4.2,
     colour = "grey20"
   ) +
   scale_fill_manual(
@@ -612,17 +628,21 @@ regional_food_share_plot <- ggplot(
   scale_x_continuous(
     labels = scales::label_percent(accuracy = 1),
     breaks = scales::breaks_extended(n = 6),
-    expand = expansion(mult = c(0, 0.14))
+    expand = expansion(mult = c(0, 0.30))
   ) +
+  coord_cartesian(clip = "off") +
   labs(
     x = "Porcentaje del gasto monetario total",
     y = NULL
   ) +
-  theme_quantificador()
+  theme_quantificador() +
+  theme(
+    plot.margin = margin(8, 38, 8, 12)
+  )
 
 dir.create("output/figures", showWarnings = FALSE, recursive = TRUE)
-social_width <- 11.25
-social_height <- 6.9
+social_width <- 6.5
+social_height <- 5.2
 
 save_figure("distribucion_ingreso_2025.png", income_distribution_2025_plot, width = social_width, height = social_height)
 save_figure("distribucion_ingreso_gasto_nacional_rural_2025.png", dist_2025_plot, width = social_width, height = social_height)

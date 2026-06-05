@@ -341,10 +341,10 @@ plot <- ggplot2::ggplot() +
   ) +
   ggplot2::annotate(
     "text",
-    x = 0,
+    x = 0.06,
     y = root_stage$ymid[[1]],
     label = root_label,
-    size = 4.1,
+    size = 4.4,
     lineheight = 1.05,
     family = "",
     colour = "#212529"
@@ -352,7 +352,7 @@ plot <- ggplot2::ggplot() +
   ggplot2::geom_text(
     data = mid_stage,
     ggplot2::aes(x = mid_label_x, y = .data$ymid, label = .data$label_text),
-    size = 4,
+    size = 4.3,
     lineheight = 1.02,
     colour = "#212529"
   ) +
@@ -360,7 +360,7 @@ plot <- ggplot2::ggplot() +
     data = right_stage,
     ggplot2::aes(x = right_label_x, y = .data$ymid, label = .data$label_text),
     hjust = 0,
-    size = 3.8,
+    size = 4.2,
     lineheight = 1.02,
     colour = "#212529"
   ) +
@@ -384,8 +384,8 @@ plot <- ggplot2::ggplot() +
 save_figure(
   "sankey_ingresos_gastos_2025.png",
   plot = plot,
-  width = 12.4,
-  height = 7.8,
+  width = 6.5,
+  height = 6.8,
   dpi = 300
 )
 
