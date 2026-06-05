@@ -166,8 +166,7 @@ hist_plot <- function(data, anio, fill_colour) {
     scale_y_continuous(labels = scales::label_comma(),
                        expand = expansion(mult = c(0, 0.05))) +
     labs(
-      title = paste("Distribución del ingreso monetario corriente — ENIGHUR", anio),
-      x     = "Ingreso monetario corriente del hogar (USD mensuales)",
+      x     = "Ingreso monetario corriente mensual del hogar",
       y     = "Número de hogares"
     ) +
     theme_minimal(base_size = 12) +
@@ -252,24 +251,12 @@ overlay_plot <- combined |>
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1)), labels = NULL) +
   labs(
-    title    = "En 12 años, la distribución de ingresos de los ecuatorianos es casi la misma",
-    subtitle = "Distribución del ingreso monetario de los hogares, 2012 vs. 2025",
-    x        = "Ingreso monetario corriente del hogar (USD mensuales)",
-    y        = "Densidad (número de hogares)",
-    caption  = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), INEC; IPC nacional (base 2014=100).\n",
-      "Nota: El ingreso de 2012 fue ajustado a precios de 2024-2025 para compararlo con la encuesta más reciente. ",
-      "El gráfico muestra hasta el percentil 95 del ingreso combinado (corte: $", formatC(cutoff, format = "d", big.mark = ","), ").\n",
-      "El ingreso considerado reúne las principales fuentes monetarias del hogar, y las cifras están ponderadas para representar al total de hogares del país."
-    )
+    x = "Ingreso monetario corriente mensual del hogar",
+    y = "Densidad (número de hogares)"
   ) +
   theme_quantificador_legend() +
   theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    axis.title.x = element_text(size = 10, hjust = 0.5),
-    axis.title.y = element_text(size = 10, hjust = 0.5),
-    plot.caption = element_text(size = 8, colour = "grey30", hjust = 0, lineheight = 1.2,
-                                margin = margin(t = 6))
+    axis.text.x  = element_text(angle = 45, hjust = 1)
   )
 
 # ==============================================================================
@@ -299,11 +286,8 @@ log_plot <- combined |>
   ) +
   guides(fill = guide_legend(override.aes = list(alpha = c(0.35, 0.55), linewidth = 0.7))) +
   labs(
-    title    = "En 12 años, la distribución de ingresos de los ecuatorianos es casi la misma",
-    subtitle = "Escala logarítmica — distribución completa sin corte",
-    x        = "Ingreso monetario corriente del hogar (USD mensuales, escala log)",
-    y        = "Densidad (número de hogares)",
-    caption  = "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), INEC."
+    x        = "Ingreso monetario corriente mensual del hogar (escala log)",
+    y        = "Densidad (número de hogares)"
   ) +
   theme_quantificador_legend()
 
@@ -403,24 +387,10 @@ dist_2025_plot <- ggplot(
     expand = expansion(mult = c(0.03, 0.14))
   ) +
   labs(
-    title = "Los hogares urbanos ganan y gastan más",
-    subtitle = "Ingresos y gastos monetarios totales, por zona, ENIGHUR 2024-2025",
     x = NULL,
-    y = "USD mensuales por hogar",
-    caption = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
-      "Nota: Las cajas resumen la distribución ponderada de hogares. La línea central marca la mediana; ",
-      "la caja va del percentil 25 al 75; y los bigotes muestran los percentiles 10 y 90. ",
-      "Se implementan percentiles ponderados por pesos muestrales."
-    )
+    y = "Ingreso o gasto mensual por hogar"
   ) +
-  theme_quantificador_legend(legend.position = c(0.83, 0.83)) +
-  theme(
-    axis.text.x = element_text(size = 8, colour = "grey20"),
-    axis.title.y = element_text(size = 9, hjust = 0.5),
-    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.2,
-                                margin = margin(t = 6))
-  )
+  theme_quantificador_legend(legend.position = c(0.83, 0.83))
 
 income_quintile_breaks_2025 <- vapply(c(0.20, 0.40, 0.60, 0.80), function(p) {
   wtd_quantile(dist_2025_base$`Ingreso monetario`, dist_2025_base$fexp, p)
@@ -468,15 +438,15 @@ quintile_axis_labels <- c(
 
 gasto_quintiles_plot <- ggplot(
   gasto_quintiles_summary,
-  aes(y = grupo, fill = grupo, colour = grupo)
+  aes(x = grupo, fill = grupo, colour = grupo)
 ) +
   geom_boxplot(
     aes(
-      xmin = ymin,
-      xlower = lower,
-      xmiddle = middle,
-      xupper = upper,
-      xmax = ymax
+      ymin = ymin,
+      lower = lower,
+      middle = middle,
+      upper = upper,
+      ymax = ymax
     ),
     stat = "identity",
     width = 0.62,
@@ -484,8 +454,8 @@ gasto_quintiles_plot <- ggplot(
     linewidth = 0.8
   ) +
   geom_text(
-    aes(x = middle, label = mediana_lbl),
-    hjust = -0.15,
+    aes(y = middle, label = mediana_lbl),
+    vjust = -0.45,
     size = 2.8,
     colour = "grey20"
   ) +
@@ -510,33 +480,17 @@ gasto_quintiles_plot <- ggplot(
     )
   ) +
   guides(fill = "none", colour = "none") +
-  scale_x_continuous(
+  scale_x_discrete(labels = quintile_axis_labels) +
+  scale_y_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
     breaks = scales::breaks_extended(n = 8),
-    expand = expansion(mult = c(0.03, 0.14))
+    expand = expansion(mult = c(0.03, 0.16))
   ) +
-  scale_y_discrete(labels = quintile_axis_labels) +
   labs(
-    title = "Los hogares más ricos gastan más",
-    subtitle = "Gasto monetario total del hogar, por quintil de ingreso, ENIGHUR 2024-2025",
-    x = "USD mensuales por hogar",
-    y = NULL,
-    caption = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
-      "Nota: Los quintiles se construyen con el ingreso monetario del hogar; Q1 es el quintil más pobre y Q5 el más rico.\n",
-      "Las cajas resumen la distribución ponderada del gasto monetario total: la línea central marca la mediana;\n",
-      "la caja va del percentil 25 al 75; y los bigotes muestran los percentiles 10 y 90. ",
-      "Se implementan percentiles ponderados por pesos muestrales."
-    )
+    x = "Quintiles de ingreso",
+    y = "Gasto monetario total mensual por hogar"
   ) +
-  theme_quantificador() +
-  theme(
-    axis.text.x = element_text(size = 8, colour = "grey20"),
-    axis.text.y = element_text(size = 8, colour = "grey20"),
-    axis.title.x = element_text(size = 9, hjust = 0.5),
-    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
-                                margin = margin(t = 6))
-  )
+  theme_quantificador()
 
 gasolina_quintiles_plot_data <- dist_2025_base |>
   mutate(
@@ -595,24 +549,10 @@ gasolina_quintiles_plot <- ggplot(
     expand = expansion(mult = c(0, 0.12))
   ) +
   labs(
-    title = "El gasto en gasolina se concentra en los hogares de mayores ingresos",
-    subtitle = "Gasto mensual promedio en gasolina del hogar, por quintil de ingreso, ENIGHUR 2024-2025",
-    x = "USD mensuales por hogar",
-    y = NULL,
-    caption = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
-      "Nota: Gasolina incluye eco país, extra y súper. Las etiquetas muestran el promedio mensual y su participación dentro del gasto monetario corriente. ",
-      "Los quintiles se construyen con el ingreso monetario del hogar."
-    )
+    x = "Gasto mensual promedio en gasolina por hogar",
+    y = "Quintiles de ingreso"
   ) +
-  theme_quantificador() +
-  theme(
-    axis.text.x = element_text(size = 8, colour = "grey20"),
-    axis.text.y = element_text(size = 8, colour = "grey20"),
-    axis.title.x = element_text(size = 9, hjust = 0.5),
-    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
-                                margin = margin(t = 6))
-  )
+  theme_quantificador()
 
 province_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$PROVINCIA, "labels")
 
@@ -684,23 +624,10 @@ province_spending_plot <- ggplot(
     expand = expansion(mult = c(0, 0.14))
   ) +
   labs(
-    title = "Galápagos es la provincia donde más gastan los hogares",
-    subtitle = "Top 5 provincias por mediana del gasto corriente total del hogar, ENIGHUR 2024-2025",
-    x = "USD mensuales por hogar",
-    y = NULL,
-    caption = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
-      "Nota: El gráfico muestra medianas ponderadas del gasto corriente total del hogar por provincia."
-    )
+    x = "Gasto corriente total mensual por hogar",
+    y = NULL
   ) +
-  theme_quantificador() +
-  theme(
-    axis.text.x = element_text(size = 8, colour = "grey20"),
-    axis.text.y = element_text(size = 8, colour = "grey20"),
-    axis.title.x = element_text(size = 9, hjust = 0.5),
-    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
-                                margin = margin(t = 6))
-  )
+  theme_quantificador()
 
 region_labels <- attr(ENIGHUR2025_HOGARES_AGREGADOS$REGION, "labels")
 
@@ -752,27 +679,14 @@ regional_food_share_plot <- ggplot(
     expand = expansion(mult = c(0, 0.14))
   ) +
   labs(
-    title = "En la Costa, la comida pesa más dentro del presupuesto del hogar",
-    subtitle = "Participación de alimentos y bebidas no alcohólicas en el gasto monetario total del hogar",
     x = "Porcentaje del gasto monetario total",
-    y = NULL,
-    caption = paste0(
-      "Fuente: Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR) 2024-2025, INEC.\n",
-      "Nota: Comida incluye únicamente la división de alimentos y bebidas no alcohólicas. Las etiquetas muestran la participación y el gasto promedio mensual por hogar."
-    )
+    y = NULL
   ) +
-  theme_quantificador() +
-  theme(
-    axis.text.x = element_text(size = 8, colour = "grey20"),
-    axis.text.y = element_text(size = 8, colour = "grey20"),
-    axis.title.x = element_text(size = 9, hjust = 0.5),
-    plot.caption = element_text(size = 7, colour = "grey30", hjust = 0, lineheight = 1.15,
-                                margin = margin(t = 6))
-  )
+  theme_quantificador()
 
 dir.create("output/figures", showWarnings = FALSE, recursive = TRUE)
-social_width <- 10
-social_height <- 6.2
+social_width <- 11.25
+social_height <- 6.9
 
 save_figure("distribucion_ingreso_2012_2025.png", overlay_plot, width = social_width, height = social_height)
 save_figure("distribucion_ingreso_2012_2025_log.png", log_plot, width = social_width, height = social_height)

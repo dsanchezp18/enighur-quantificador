@@ -13,19 +13,19 @@ LOGO_PATH <- "quantificador.png"
 # ---- Tema base ----
 #' Tema ggplot2 compartido para todos los gráficos del proyecto
 theme_quantificador <- function() {
-  theme_classic() +
+  theme_classic(base_size = 12) +
     theme(
-      axis.text             = element_text(colour = "grey20", size = 7.5),
-      axis.title.x          = element_text(size = 7, margin = margin(t = 8, r = 0, b = 0, l = 0), hjust = 0),
-      axis.title.y          = element_text(size = 7, margin = margin(r = 6), hjust = 1),
-      plot.title            = element_text(colour = "grey20", size = 12.5, face = "bold", hjust = 0),
-      plot.subtitle         = element_text(colour = "grey30", size = 9, lineheight = 1.1, hjust = 0),
-      plot.caption          = element_text(colour = "grey30", size = 5, lineheight = 1.1, hjust = 0,
+      axis.text             = element_text(colour = "grey20", size = 12),
+      axis.title.x          = element_text(size = 12, margin = margin(t = 8, r = 0, b = 0, l = 0), hjust = 0.5),
+      axis.title.y          = element_text(size = 12, margin = margin(r = 8), hjust = 0.5),
+      plot.title            = element_text(colour = "grey20", size = 14, face = "bold", hjust = 0),
+      plot.subtitle         = element_text(colour = "grey30", size = 12, lineheight = 1.15, hjust = 0),
+      plot.caption          = element_text(colour = "grey30", size = 11, lineheight = 1.15, hjust = 0,
                                            margin = margin(t = 6, r = 0, b = 0, l = 0)),
       axis.line             = element_line(colour = "grey60"),
       legend.position       = "none",
       panel.grid            = element_blank(),
-      plot.margin           = margin(6, 36, 6, 16),
+      plot.margin           = margin(8, 16, 8, 12),
       plot.title.position   = "plot",
       plot.caption.position = "plot"
     )
@@ -39,8 +39,8 @@ theme_quantificador_legend <- function(legend.position = c(0.82, 0.82)) {
       legend.position   = legend.position,
       legend.background = element_rect(fill = "white", colour = "grey80", linewidth = 0.3),
       legend.key        = element_blank(),
-      legend.text       = element_text(size = 7.5, colour = "grey20"),
-      legend.title      = element_text(size = 7.5, colour = "grey20")
+      legend.text       = element_text(size = 12, colour = "grey20"),
+      legend.title      = element_text(size = 12, colour = "grey20")
     )
 }
 

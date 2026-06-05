@@ -192,17 +192,11 @@ presence_plot <- ggplot(
     labels = scales::label_percent(accuracy = 1)
   ) +
   scale_colour_identity() +
-  labs(
-    title = "Qué productos aparecen más en la compra del hogar",
-    subtitle = "Se muestran los productos más comunes a nivel nacional y los que más distinguen a cada región",
-    x = NULL,
-    y = NULL,
-    caption = "Fuente: ENIGHUR 2024-2025, bases primarias, gastos diarios sección 2. Presencia medida como compra observada del producto en el hogar, con factor de expansión."
-  ) +
+  labs(x = NULL, y = NULL) +
   theme_quantificador() +
   theme(
-    axis.text.y = element_text(size = 9.2, lineheight = 0.95),
-    axis.text.x = element_text(size = 10, face = "bold"),
+    axis.text.y = element_text(size = 12, lineheight = 0.95),
+    axis.text.x = element_text(size = 12, face = "bold"),
     axis.ticks = element_blank(),
     axis.line = element_blank(),
     panel.grid = element_blank(),
@@ -213,8 +207,8 @@ presence_plot <- ggplot(
 save_figure(
   "productos_alimentos_mas_presentes_region_2025.png",
   presence_plot,
-  width = 10.4,
-  height = 6.9
+  width = 11.25,
+  height = 7.1
 )
 
 message("Saved figure: output/figures/productos_alimentos_mas_presentes_region_2025.png")

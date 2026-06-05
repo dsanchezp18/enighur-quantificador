@@ -205,6 +205,11 @@ category_rows <- category_rows |>
     valor_avg = (sum(.data$valor) / ing_cor_tot_exp) * avg_ing_cor_tot,
     .groups = "drop"
   ) |>
+  dplyr::left_join(
+    gasto_map |>
+      dplyr::distinct(.data$categoria_codigo, .data$color_hex),
+    by = "categoria_codigo"
+  ) |>
   dplyr::arrange(.data$orden) |>
   dplyr::mutate(
     label = .data$categoria_nombre,
@@ -248,10 +253,10 @@ root_xmin <- -0.18
 root_xmax <- 0.18
 mid_xmin <- 1.24
 mid_xmax <- 1.54
-right_xmin <- 2.62
-right_xmax <- 2.92
+right_xmin <- 2.34
+right_xmax <- 2.64
 mid_label_x <- (mid_xmin + mid_xmax) / 2
-right_label_x <- 3.00
+right_label_x <- 2.70
 root_flow_x0 <- root_xmax
 root_flow_x1 <- mid_xmin
 cat_flow_x0 <- mid_xmax
@@ -263,10 +268,7 @@ mid_palette <- c(
   "Ahorro" = "#1B4332"
 )
 
-category_palette <- c(
-  "#4F772D", "#90A955", "#EC9A29", "#BC4749", "#386641", "#6A994E",
-  "#A7C957", "#F2C14E", "#D68C45", "#7F5539", "#5E548E", "#6C757D", "#8E9AAF"
-)
+category_palette <- category_rows$color_hex
 
 root_flows <- dplyr::bind_rows(lapply(seq_along(root_allocations), function(i) {
   make_flow_polygon(
@@ -342,7 +344,7 @@ plot <- ggplot2::ggplot() +
     x = 0,
     y = root_stage$ymid[[1]],
     label = root_label,
-    size = 3.2,
+    size = 4.1,
     lineheight = 1.05,
     family = "",
     colour = "#212529"
@@ -350,7 +352,7 @@ plot <- ggplot2::ggplot() +
   ggplot2::geom_text(
     data = mid_stage,
     ggplot2::aes(x = mid_label_x, y = .data$ymid, label = .data$label_text),
-    size = 3,
+    size = 4,
     lineheight = 1.02,
     colour = "#212529"
   ) +
@@ -358,39 +360,32 @@ plot <- ggplot2::ggplot() +
     data = right_stage,
     ggplot2::aes(x = right_label_x, y = .data$ymid, label = .data$label_text),
     hjust = 0,
-    size = 2.7,
+    size = 3.8,
     lineheight = 1.02,
     colour = "#212529"
   ) +
-  ggplot2::coord_cartesian(xlim = c(-0.28, 4.35), ylim = c(0, plot_height), clip = "off") +
+  ggplot2::coord_cartesian(xlim = c(-0.28, 3.55), ylim = c(0, plot_height), clip = "off") +
   ggplot2::scale_fill_identity() +
   ggplot2::scale_alpha_identity() +
   ggplot2::scale_x_continuous(expand = c(0, 0)) +
   ggplot2::scale_y_continuous(expand = c(0, 0), labels = scales::label_dollar(prefix = "$", big.mark = ",")) +
-  ggplot2::labs(
-    subtitle = "Descomposicion del ingreso monetario promedio del hogar ENIGHUR 2024-2025",
-    x = NULL,
-    y = "USD mensuales promedio",
-    caption = paste0(
-      "Fuente: INEC, ENIGHUR 2024-2025. Totales nacionales de CUADRO 2.1.1, 2.1.3 y promedio nacional de CUADRO 2.2.1.\n",
-      "El ahorro se calcula como ingreso monetario menos gasto corriente de consumo y gasto de no consumo."
-    )
-  ) +
-  ggplot2::theme_minimal(base_size = 11) +
+  ggplot2::labs(x = NULL, y = NULL) +
+  theme_quantificador() +
   ggplot2::theme(
     panel.grid = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
     axis.ticks = ggplot2::element_blank(),
-    plot.margin = ggplot2::margin(10, 170, 10, 10),
-    plot.title = ggplot2::element_text(face = "bold"),
-    plot.caption = ggplot2::element_text(hjust = 0)
+    axis.line.y = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    plot.margin = ggplot2::margin(8, 60, 8, 12)
   )
 
 save_figure(
   "sankey_ingresos_gastos_2025.png",
   plot = plot,
-  width = 14,
-  height = 8,
+  width = 12.4,
+  height = 7.8,
   dpi = 300
 )
 
@@ -431,14 +426,14 @@ interactive_plot <- plotly::plot_ly(
   node = list(
     label = interactive_nodes$label,
     color = interactive_nodes$color,
-    pad = 12,
-    thickness = 22,
+    pad = 14,
+    thickness = 26,
     line = list(color = "#495057", width = 0.4),
-    x = c(0.02, rep(0.37, length(mid_labels)), rep(0.78, nrow(category_rows))),
+    x = c(0.03, rep(0.38, length(mid_labels)), rep(0.70, nrow(category_rows))),
     y = c(
-      0.18,
-      seq(0.08, 0.82, length.out = length(mid_labels)),
-      seq(0.03, 0.92, length.out = nrow(category_rows))
+      0.17,
+      seq(0.10, 0.80, length.out = length(mid_labels)),
+      seq(0.05, 0.89, length.out = nrow(category_rows))
     ),
     hovertemplate = "%{label}<extra></extra>"
   ),
@@ -454,23 +449,7 @@ interactive_plot <- plotly::plot_ly(
     font = list(size = 12, color = "#212529"),
     paper_bgcolor = "white",
     plot_bgcolor = "white",
-    margin = list(l = 20, r = 220, t = 70, b = 50),
-    annotations = list(
-      list(
-        x = 0.02,
-        y = -0.08,
-        xref = "paper",
-        yref = "paper",
-        xanchor = "left",
-        yanchor = "top",
-        align = "left",
-        showarrow = FALSE,
-        text = paste0(
-          "Fuente: INEC, ENIGHUR 2024-2025. Totales nacionales de CUADRO 2.1.1, 2.1.3 y promedio nacional de CUADRO 2.2.1.<br>",
-          "El ahorro se calcula como ingreso monetario menos gasto corriente de consumo y gasto de no consumo."
-        )
-      )
-    )
+    margin = list(l = 20, r = 40, t = 30, b = 30)
   )
 
 interactive_path <- file.path("output", "figures", "sankey_ingresos_gastos_interactivo.html")
