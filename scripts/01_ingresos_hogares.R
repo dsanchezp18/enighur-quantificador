@@ -175,121 +175,57 @@ hist_plot <- function(data, anio, fill_colour) {
 }
 
 # ==============================================================================
-# Overlay
+# 2025 income distribution
 # ==============================================================================
 
-combined <- bind_rows(
-  ingresos_2025 |> mutate(anio = "2025"),
-  ingresos_2012 |> mutate(anio = "2012")
-)
+cutoff_2025 <- ceiling(wtd_quantile(ingresos_2025$ing_mon_cor, ingresos_2025$fexp, 0.95) / 100) * 100
+brks_2025 <- seq(0, cutoff_2025, by = 100)
+med_2025 <- wtd_quantile(ingresos_2025$ing_mon_cor, ingresos_2025$fexp, 0.5)
 
-cutoff <- ceiling(wtd_quantile(combined$ing_mon_cor, combined$fexp, 0.95) / 500) * 500
-brks   <- make_breaks(cutoff)
-
-medians <- combined |>
-  group_by(anio) |>
-  summarise(mediana = wtd_quantile(ing_mon_cor, fexp, 0.5), .groups = "drop")
-
-med_2012 <- medians$mediana[medians$anio == "2012"]
-med_2025 <- medians$mediana[medians$anio == "2025"]
-
-median_lines <- data.frame(
-  xintercept = c(med_2012, med_2025),
-  lbl        = c("Mediana 2012", "Mediana 2025")
-)
-
-overlay_plot <- combined |>
-  filter(ing_mon_cor <= cutoff) |>
+income_distribution_2025_plot <- ingresos_2025 |>
+  filter(ing_mon_cor <= cutoff_2025) |>
   ggplot(aes(x = ing_mon_cor, weight = fexp)) +
-  geom_density(
-    data      = \(d) filter(d, anio == "2025"),
-    aes(colour = "ENIGHUR 2024-2025"),
-    fill = "#2D6A9F", alpha = 0.55, linewidth = 0.7
-  ) +
-  geom_density(
-    data      = \(d) filter(d, anio == "2012"),
-    aes(colour = "ENIGHUR 2011-2012"),
-    fill = "#D4691E", alpha = 0.35, linewidth = 0.7
+  geom_histogram(
+    aes(y = after_stat(count / sum(count))),
+    breaks = brks_2025,
+    fill = "#2D6A9F",
+    colour = "white",
+    linewidth = 0.2,
+    closed = "left"
   ) +
   geom_vline(
-    data        = median_lines,
-    aes(xintercept = xintercept, colour = lbl),
-    linetype    = "dashed", linewidth = 0.7, inherit.aes = FALSE,
-    key_glyph   = "path"
+    xintercept = med_2025,
+    colour = "#A8400A",
+    linetype = "dashed",
+    linewidth = 0.8
   ) +
-  annotate("text",
-           x = med_2012, y = Inf,
-           label = paste0("Mediana 2012\n$", formatC(round(med_2012), format = "d", big.mark = ",")),
-           hjust = 1.1, vjust = 1.4, size = 2.8, colour = "#A8400A") +
-  annotate("text",
-           x = med_2025, y = Inf,
-           label = paste0("Mediana 2025\n$", formatC(round(med_2025), format = "d", big.mark = ",")),
-           hjust = -0.1, vjust = 4.5, size = 2.8, colour = "#1A3A5C") +
-  scale_colour_manual(
-    name   = NULL,
-    values = c(
-      "ENIGHUR 2011-2012" = "#A8400A",
-      "ENIGHUR 2024-2025" = "#1A3A5C",
-      "Mediana 2012"      = "#A8400A",
-      "Mediana 2025"      = "#1A3A5C"
-    ),
-    breaks = c("ENIGHUR 2011-2012", "ENIGHUR 2024-2025", "Mediana 2012", "Mediana 2025")
-  ) +
-  guides(
-    colour = guide_legend(override.aes = list(
-      fill      = c("#D4691E", "#2D6A9F", NA,       NA),
-      alpha     = c(0.35,      0.55,      1,        1),
-      colour    = c("#A8400A", "#1A3A5C", "#A8400A","#1A3A5C"),
-      linetype  = c("solid",   "solid",   "dashed", "dashed"),
-      linewidth = c(0.7,       0.7,       0.7,      0.7),
-      size      = c(5,         5,         0,        0)
-    ))
+  annotate(
+    "text",
+    x = med_2025,
+    y = Inf,
+    label = paste0("Mediana 2025\n$", formatC(round(med_2025), format = "d", big.mark = ",")),
+    hjust = -0.08,
+    vjust = 3.8,
+    size = 3.0,
+    colour = "#A8400A"
   ) +
   scale_x_continuous(
     labels = scales::label_dollar(prefix = "$", big.mark = ","),
+    breaks = scales::breaks_width(250),
     expand = expansion(mult = c(0, 0.02))
   ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1)), labels = NULL) +
+  scale_y_continuous(
+    labels = scales::label_percent(accuracy = 1),
+    expand = expansion(mult = c(0, 0.1))
+  ) +
   labs(
     x = "Ingreso monetario corriente mensual del hogar",
-    y = "Densidad (número de hogares)"
+    y = "Porcentaje de hogares"
   ) +
-  theme_quantificador_legend() +
+  theme_quantificador() +
   theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1)
   )
-
-# ==============================================================================
-# Log-scale test chart (uncut)
-# ==============================================================================
-
-log_plot <- combined |>
-  ggplot(aes(x = ing_mon_cor, weight = fexp)) +
-  geom_density(
-    data      = \(d) filter(d, anio == "2025"),
-    aes(fill  = "ENIGHUR 2024-2025"),
-    colour    = "#1A3A5C", alpha = 0.55, linewidth = 0.7
-  ) +
-  geom_density(
-    data      = \(d) filter(d, anio == "2012"),
-    aes(fill  = "ENIGHUR 2011-2012"),
-    colour    = "#A8400A", alpha = 0.35, linewidth = 0.7
-  ) +
-  scale_x_log10(
-    labels = scales::label_dollar(prefix = "$", big.mark = ","),
-    expand = expansion(mult = c(0.01, 0.02))
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1)), labels = NULL) +
-  scale_fill_manual(
-    name   = NULL,
-    values = c("ENIGHUR 2011-2012" = "#D4691E", "ENIGHUR 2024-2025" = "#2D6A9F")
-  ) +
-  guides(fill = guide_legend(override.aes = list(alpha = c(0.35, 0.55), linewidth = 0.7))) +
-  labs(
-    x        = "Ingreso monetario corriente mensual del hogar (escala log)",
-    y        = "Densidad (número de hogares)"
-  ) +
-  theme_quantificador_legend()
 
 # ==============================================================================
 # 2025 income vs expenditure — urban vs rural weighted box summaries
@@ -688,8 +624,7 @@ dir.create("output/figures", showWarnings = FALSE, recursive = TRUE)
 social_width <- 11.25
 social_height <- 6.9
 
-save_figure("distribucion_ingreso_2012_2025.png", overlay_plot, width = social_width, height = social_height)
-save_figure("distribucion_ingreso_2012_2025_log.png", log_plot, width = social_width, height = social_height)
+save_figure("distribucion_ingreso_2025.png", income_distribution_2025_plot, width = social_width, height = social_height)
 save_figure("distribucion_ingreso_gasto_nacional_rural_2025.png", dist_2025_plot, width = social_width, height = social_height)
 save_figure("gasto_total_por_quintil_ingreso_2025.png", gasto_quintiles_plot, width = social_width, height = social_height)
 save_figure("gasolina_promedio_por_quintil_2025.png", gasolina_quintiles_plot, width = social_width, height = social_height)

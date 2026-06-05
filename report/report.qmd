@@ -51,7 +51,7 @@ En su extremo detalle, la ENIGHUR también nos permite entender tópicos especia
 
 La encuesta nos informa que, durante 2025^[El periodo de recolección de datos de la encuesta fue de diciembre de 2024 a noviembre de 2025.], el promedio del ingreso monetario de los hogares fue de $889^[INEC reporta un ingreso más alto con la misma encuesta, puesto que se consideran ingresos no monetarios mediante estimaciones del valor de dichos ingresos en especie.]. Este promedio es un poco más optimista que el de la ENEMDU, dependiendo de cómo se lo calcule^[Ya que la ENIGHUR es una encuesta optimizada tanto para medir el ingreso como el gasto, el valor de $889 es la mejor estimación disponible para este periodo.]. El hogar ecuatoriano promedio tuvo 3.31 personas en 2025.
 
-El gráfico 1 abajo muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo"^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias a otros hogares o instituciones.
+El gráfico 1 muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo"^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias a otros hogares o instituciones. Además, se determina que: 
 
 - El componente que más les pesa a las familias es el gasto en alimentos y restaurantes: $202 en promedio, lo que representa el 22.8% del ingreso y el 32% del gasto de consumo total. De acuerdo con la teoría económica y la investigación empírica, este alto porcentaje es muy común en países en desarrollo [@worldbankconsumptionmarket]. Como comparación, los hogares canadienses dedicaron el 15.7% de sus gastos a comida en 2023 [@statcan2025shs].
 
@@ -87,24 +87,30 @@ if (knitr::is_html_output() && file.exists(sankey_path)) {
 }
 ```
 
-# La distribución del ingreso en 2025 es esencialmente la misma que en 2012
+# La mayoría de hogares en Ecuador ganan menos de $1,000 mensuales
 
-La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor y el otro 50% gana más. Esa cifra es solo unos pocos dólares más alta que la mediana del ingreso en 2012 ($614), ajustando los ingresos de dicho año para la inflación. 
+La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor y el otro 50% gana más. Como el promedio nacional es bastante más alto, de $889, esto ya anticipa una distribución sesgada hacia arriba: hay relativamente pocos hogares con ingresos altos, pero empujan el promedio hacia arriba. El gráfico 2 muestra esa distribución solo para 2025.
 
-Generalmente, se espera que la economía progrese en un periodo así de largo, pero los datos muestran más bien una sociedad estancada en ese nivel de ingreso. El gráfico 2 detalla mejor esta comparación.
+*Gráfico 2: Distribución del ingreso monetario mensual de los hogares en 2025*
 
-*Gráfico 2: Distribución del ingreso monetario de los hogares en 2012 y 2025*
-
-```{r, results='asis', fig.cap="Fuente: ENIGHUR 2011-2012 y ENIGHUR 2024-2025, INEC. Nota: Los ingresos de 2012 fueron ajustados para compararlos con los de 2025. El gráfico llega hasta el percentil 95 del ingreso combinado."}
-dist_path <- file.path("..", "output", "figures", "distribucion_ingreso_2012_2025.png")
+```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: Las barras muestran el porcentaje de hogares en cada tramo de ingreso. La línea punteada marca la mediana. El gráfico llega hasta el percentil 95 del ingreso monetario del hogar en 2025."}
+dist_path <- file.path("..", "output", "figures", "distribucion_ingreso_2025.png")
 knitr::include_graphics(dist_path)
 ```
 
-Se habló mucho en semanas pasadas de cuántos hogares ganan $1.500 dólares o más. La ENIGHUR confirma, de manera fulminante, lo que también sugiere la ENEMDU: solo 14.7% de familias gana $1,500 o más. En el extremo más alto de la distribución, el 1%, que representa a un grupo _muy_ selecto de hogares, gana $4,465 mensuales o más.
+En general, encuentro que:
+
+- El 71.3% de los hogares gana menos de $1,000 al mes. Solo el 28.7% supera ese umbral, que además marca de forma aproximada la entrada al quintil más alto de ingresos.
+
+- También se habló mucho en semanas pasadas de cuántos hogares ganan $1,500 o más. La ENIGHUR confirma, de manera bastante clara, lo que también sugiere la ENEMDU: solo 14.7% de los hogares llega a ese nivel.
+
+- En el extremo más alto de la distribución, el 1% de hogares gana $4,465 mensuales o más. Ese grupo muy pequeño concentra 7.1% de todo el ingreso monetario de los hogares del país, una señal bastante nítida de la desigualdad que existe en Ecuador.
+
+- Dicho de otra forma: la mayor parte del país está concentrada en los primeros tramos de la distribución, mientras que la cola derecha es larga y delgada. Hay pocos hogares con ingresos muy altos, pero son suficientes para alejar bastante al promedio de la mediana.
 
 # Los productos esenciales pesan más en los hogares más pobres
 
-El siguiente gráfico ordena a los hogares por quintiles de ingreso y muestra cómo cambia la distribución del gasto monetario total. Como era de esperar, el gasto crece de manera sostenida al pasar de los hogares más pobres a los hogares más ricos.
+A propósito de las diferencias entre los hogares más ricos y pobres, es posible realizar una comparación de gastos por quintil de ingresos. El Gráfico 3 ordena a los hogares por estos grupos y muestra cómo cambia la distribución del gasto monetario total. Como era de esperar, el gasto crece de manera sostenida al pasar de los hogares más pobres a los hogares más ricos.
 
 *Gráfico 3: Gasto monetario total mensual del hogar por quintil de ingreso*
 
@@ -113,19 +119,15 @@ dist_quintiles_path <- file.path("..", "output", "figures", "gasto_total_por_qui
 knitr::include_graphics(dist_quintiles_path)
 ```
 
-- Entre los hogares más pobres, el margen de gasto es muy estrecho y la canasta está mucho más comprimida:
-  la mediana mensual en alimentos y restaurantes es de apenas $71, en vivienda y servicios de $15, en transporte de $6 y en salud de $6.
+- Entre los hogares más pobres, la canasta está mucho más comprimida: la mediana mensual en alimentos y restaurantes es de apenas $71, en vivienda y servicios de $15, en transporte de $6 y en salud de $6. Aunque los montos absolutos son bajos, esto también implica una canasta mucho más concentrada en bienes esenciales.
 
 - En recreación y educación, la mediana entre los hogares más pobres es directamente $0. Este tipo de hogares quizás no pueda permitirse gastar en ese tipo de bienes.
 
-- Entre los hogares más ricos, todas las partidas se expanden:
-  la mediana mensual sube a $309 en alimentos y restaurantes, $69 en vivienda y servicios, $129 en transporte, $54 en salud y $64 en recreación y educación.
-
-- Mientras en los hogares más pobres ese rubro casi desaparece, en los más ricos se convierte en un componente regular del gasto.
+- Entre los hogares más ricos, todas las partidas se expanden: la mediana mensual sube a $309 en alimentos y restaurantes, $69 en vivienda y servicios, $129 en transporte, $54 en salud y $64 en recreación y educación. La canasta se vuelve bastante más diversificada y menos dominada por bienes básicos.
 
 Este patrón es consistente con lo que encuentra la literatura económica. El Banco Mundial documenta que, conforme aumenta el gasto total, la participación de alimentos y bebidas tiende a bajar, mientras que transporte gana peso [@worldbankconsumptionmarket]. La implicación para inflación es importante: no todas las familias enfrentan la misma “inflación efectiva”. Un trabajo del Fondo Monetario Internacional muestra que aumentos en precios de alimentos afectan de forma desproporcionada a hogares de menores ingresos, porque esos rubros ocupan una parte mayor de su canasta y porque, ante esos choques, suelen recortar cantidad o calidad de alimentos y también gasto en salud y educación [@amaglobeli2023policy]. 
 
-Esto también ayuda a entender por qué el aumento del IVA en este periodo pega más a los hogares de menores ingresos: al ser un impuesto al consumo, y al concentrarse su gasto en bienes esenciales, su efecto es regresivo en la práctica. Por eso, cuando suben más rápido los precios de bienes esenciales, o cuando se encarece el consumo por impuestos indirectos, la presión real sobre las familias más pobres es mayor. 
+Esto también ayuda a entender por qué el aumento del IVA en este periodo pega más a los hogares de menores ingresos: al ser un impuesto al consumo, y al concentrarse su gasto en bienes esenciales, su efecto es regresivo en la práctica. Por eso, cuando suben más rápido los precios de bienes esenciales, o cuando se encarece el consumo por impuestos indirectos, la presión sobre las familias más pobres es mayor. 
 
 # La gasolina es, sobre todo, un gasto de hogares de mayores ingresos
 
@@ -149,13 +151,27 @@ knitr::include_graphics(gasolina_quintiles_path)
 
 - Esto no significa necesariamente que los hogares pobres no usen transporte, sino que la gasolina para vehículo particular está mucho menos extendida en su canasta.
 
+# Portovelo (El Oro) es la ciudad donde más se gasta en bebidas alcohólicas, tabaco y estupefacientes
+
+Dentro de la gran categoría de bebidas alcohólicas, tabaco y estupefacientes, la mediana del gasto es cero en todos los quintiles de ingreso. Es decir, para la mayoría de hogares este rubro no aparece como un gasto mensual típico. Aun así, el promedio sí muestra diferencias: en el quintil más pobre el gasto medio bordea apenas $0.9 al mes, mientras que en el quintil más rico sube a $5.7. Sobre este gasto, también encuentro que:
+
+- Solo alrededor de 12% de los hogares registra algún gasto en esta categoría en un mes típico.
+
+- Entre quienes sí gastan, el desembolso medio ronda $27.5 y la mediana $15. También hay un perfil social bastante claro: la proporción de hogares que gasta en este rubro sube de 5.8% en el quintil más pobre a 16.5% en el quintil más rico. 
+
+- Además, cuando los hogares urbanos gastan en esta categoría, el monto medio es mayor que en los rurales: $29.4 frente a $21.7.
+
+- A escala territorial, Portovelo, en El Oro, aparece como la ciudad con el gasto promedio más alto en esta categoría, con $38.8 mensuales por hogar. Le siguen San Juan Bosco y Santiago de Méndez, ambas en Morona Santiago. Incluso en esos casos, sin embargo, el rubro sigue siendo minoritario dentro del presupuesto total: en Portovelo equivale a cerca de 7.3% del gasto monetario del hogar.
+
+Es algo difícil de creer que tan pocos hogares registren este gasto. Existe la posibilidad de que el consumo de alcohol se encuentre en otros componentes, como restaurantes, y que además exista una connotación negativa sobre este consumo que dificulte una buena recolección de datos. Una investigación profunda sobre este fenómeno está fuera del alcance de mi artículo, pero vale la pena considerarla a futuro.
+
 # Galápagos es la provincia donde más gastan los hogares
 
-Si se compara la mediana del gasto corriente total del hogar entre provincias, Galápagos aparece claramente en primer lugar.
+¿Qué tan bien representan esos totales nacionales a cada región? Los datos muestran que no tanto. Las familias de cada provincia gastan de forma distinta, tanto en cantidad como en composición. Abajo, algunos detalles:
 
-- En Galápagos, la mediana del gasto corriente total del hogar llega a $1,632, más del doble de la mediana nacional de $737.
+- Si se compara la mediana del gasto corriente total del hogar entre provincias, Galápagos aparece claramente en primer lugar, llegando a $1,632. Esto es más del doble de la mediana nacional.
 
-- Después vienen Azuay con $873 y Pichincha con $860, bastante por encima del promedio del país.
+- Después vienen Azuay con $873 y Pichincha con $860, bastante por encima del promedio del país. En otros análisis del INEC, Cuenca siempre está entre los lugares más costosos. Además, se conoce como un destino popular para _expats_ de EE. UU. y Canadá. Es posible que este tipo de hogares eleve la mediana del gasto.
 
 *Gráfico 5: Mediana del gasto corriente total del hogar en las cinco provincias con valores más altos*
 
@@ -164,21 +180,17 @@ gasto_provincia_path <- file.path("..", "output", "figures", "gasto_total_median
 knitr::include_graphics(gasto_provincia_path)
 ```
 
-- En Galápagos, la mediana de alimentos y restaurantes llega a $395, frente a $173 a nivel nacional.
+- En Galápagos, la mediana de alimentos y restaurantes llega a $395, frente a $173 a nivel nacional. Es conocido que los alimentos son costosos en la región insular.
 
-- La mediana en vivienda y servicios sube a $87, frente a $36 a nivel nacional.
+- La mediana en vivienda y servicios de Galápagos sube a $87, frente a $36 a nivel nacional. 
 
-- La categoría otros alcanza $159, frente a $73.
-
-- Pichincha también destaca por una mediana relativamente alta en vivienda y servicios con $66 y transporte con $51, mientras que Guayas resalta más por alimentos y restaurantes con $207 que por vivienda.
-
-Es decir, la canasta es más cara de manera bastante generalizada.
+- Pichincha también destaca por una mediana relativamente alta en vivienda y servicios con $66 y transporte con $51, mientras que Guayas resalta más por alimentos y restaurantes con $207.
 
 La distancia entre Galápagos y el resto sirve para recordar que el costo de vida no es homogéneo dentro del país. La ENIGHUR nos permite observar esta información por primera vez en muchos años, puesto que el índice de precios espacial de Galápagos no se ha realizado en una década. Si bien el gasto no es igual que el precio, porque gasto es precio por cantidad, es la mejor medida disponible para entender los costos de vida en el Ecuador por el momento.
 
 # La Costa come cebolla, tomate y verde; la Sierra come pan
 
-La encuesta permite observar productos concretos en las compras del hogar. La medida que uso es simple: el porcentaje de hogares que reportó al menos una compra del producto en la semana de referencia. La comparación por región deja ver una canasta nacional reconocible, pero también contrastes bastante marcados entre Costa, Sierra y Amazonía.
+Las bases de datos primarias de la ENIGHUR permiten observar productos concretos en las compras del hogar. La medida que uso es simple: el porcentaje de hogares que reportó al menos una compra del producto en la semana de referencia. La comparación por región deja ver una canasta nacional reconocible, pero también contrastes bastante marcados entre Costa, Sierra y Amazonía.
 
 *Gráfico 6: Productos que aparecen con más frecuencia en la compra del hogar, a nivel nacional y por región*
 
@@ -187,21 +199,23 @@ food_products_path <- file.path("..", "output", "figures", "productos_alimentos_
 knitr::include_graphics(food_products_path)
 ```
 
-- A escala nacional, la canasta más extendida arranca con tomate riñón, presente en 64.9% de hogares, pan común blanco con 64.4% y cebolla paiteña con 60.2%. Luego vienen huevos con 55.5% y leche entera en funda con 52.1%.
+- A escala nacional, la canasta de alimentos más común tiene tomate riñón, presente en 64.9% de hogares, pan común blanco con 64.4% y cebolla paiteña con 60.2%. Luego vienen huevos con 55.5% y leche entera en funda con 52.1%.
 
-- En la Costa dominan tomate riñón y cebolla paiteña, ambos presentes en poco más de 7 de cada 10 hogares. Después aparecen papa chola, pan común blanco y pimiento verde, todos alrededor de 59%. También resalta el plátano verde: al sumar sus dos variedades principales, aparece en 45.1% de hogares costeños.
+- Hay diferencias regionales notables. En la Costa dominan tomate riñón y cebolla paiteña, ambos presentes en poco más de 7 de cada 10 hogares. Después aparecen papa chola, pan común blanco y pimiento verde, todos alrededor de 59%. También resalta el plátano verde: al sumar sus dos variedades principales, aparece en 45.1% de hogares costeños.
 
 - En la Sierra, el producto claramente dominante es el pan común blanco: aparece en 71.7% de hogares, bastante por encima del tomate riñón con 57.8% y de los huevos con 53.5%. También destacan leche entera en funda con 51.0% y cebolla paiteña con 48.9%.
 
 - La Amazonía u Oriente combina rasgos de ambas regiones. Tomate riñón llega a 58.5%, cebolla paiteña a 53.8% y pan común blanco a 50.0%, pero el plátano verde sube hasta 46.4%, muy cerca de los huevos, que alcanzan 47.1%.
 
+Los datos nos demuestran (o verifican) que en nuestro país las familias consumen ciertas cosas de manera uniforme. Sin embargo, la composición regional varía: la Costa come cebolla, tomate y verde; la Sierra come pan; y la Amazonía se parece más a una mezcla de ambos patrones, con un peso especialmente alto del plátano verde.
+
 # ¿Y ahora qué?
 
-La ENIGHUR 2024-2025 revela varios detalles sobre la realidad ecuatoriana. El hogar ecuatoriano típico sigue siendo frágil: el ingreso típico apenas supera el nivel observado en 2012 y, al mismo tiempo, una parte grande del presupuesto todavía se concentra en bienes básicos. Eso significa que, para una gran parte del país, la subida de precios de bienes esenciales puede ser un fuerte golpe a su bienestar económico.
+La ENIGHUR 2024-2025 revela varios detalles sobre la realidad ecuatoriana. El hogar ecuatoriano típico sigue siendo frágil: el ingreso mediano del hogar es de apenas $620 y, al mismo tiempo, una parte grande del presupuesto todavía se concentra en bienes básicos. Eso significa que, para una gran parte del país, la subida de precios de bienes esenciales puede ser un fuerte golpe a su bienestar económico.
 
-Adicionalmente, si bien existe un promedio y una mediana nacional, el estilo de vida varía mucho en función de las circunstancias, la región e incluso la provincia. Los hogares pobres destinan mucho más de su gasto a bienes esenciales, mientras que los hogares de mayores ingresos tienen una canasta bastante más diversificada. La Costa consume una canasta de hortalizas y verde; la Sierra, una canasta donde el pan pesa más; y la Amazonía mezcla ambos patrones, con una presencia especialmente alta de plátano verde.
+Adicionalmente, si bien existe un promedio y una mediana nacional, el estilo de vida varía mucho en función de las circunstancias, la región e incluso la provincia. Los hogares pobres destinan mucho más de su gasto a bienes esenciales, mientras que los hogares de mayores ingresos tienen una canasta bastante más diversificada. La Costa consume una canasta de hortalizas y verde; la Sierra, una canasta donde el pan pesa más, etc. 
 
-Todas estas realidades, aunque quizás ya muy presentes en la mente colectiva de los ecuatorianos, hoy se confirman mediante evidencia empírica. Desafortunadamente, tuvieron que pasar 12 años para lograrlo. Sin una encuesta de ingresos y gastos actualizada, el país termina midiendo inflación, bienestar y costo de vida con información desactualizada. La estadística socioeconómica es clave para absolutamente todos los sectores del país; manejarla bien es una responsabilidad enorme.
+La ENIGHUR es una de las encuestas más exhaustivas que produce el INEC. Nos permite visualizar las realidades de diferentes hogares, realidades que, aunque están muy presentes en la mente colectiva de los ecuatorianos, hoy se confirman mediante evidencia empírica. Desafortunadamente, tuvieron que pasar 12 años para lograrlo. Sin una encuesta de ingresos y gastos actualizada, el país termina midiendo inflación, bienestar y costo de vida con información desactualizada. Con todo esto, mi punto es que la estadística socioeconómica es clave para absolutamente todos los sectores del país. Manejarla bien es una responsabilidad enorme que no deberíamos descuidar.
 
 # Referencias
 
