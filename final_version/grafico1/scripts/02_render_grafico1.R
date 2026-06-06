@@ -21,7 +21,7 @@ theme_grafico1 <- function() {
     theme(
       axis.text = element_text(colour = "grey20", size = 12),
       axis.title = element_text(size = 12),
-      axis.line = element_line(colour = "grey60"),
+      axis.line = element_blank(),
       legend.position = "none",
       panel.grid = element_blank(),
       plot.margin = margin(8, 60, 8, 12)
@@ -132,6 +132,8 @@ right_xmin <- 2.34
 right_xmax <- 2.64
 mid_label_x <- (mid_xmin + mid_xmax) / 2
 right_label_x <- 2.70
+right_value_x <- 3.30
+muebles_value_x <- 3.44
 root_flow_x0 <- root_xmax
 root_flow_x1 <- mid_xmin
 cat_flow_x0 <- mid_xmax
@@ -176,14 +178,38 @@ node_rects <- bind_rows(
 mid_stage <- mid_stage |>
   mutate(
     label_text = c(
-      paste0("Gasto corriente\n", fmt_usd(avg_gas_corr)),
-      paste0("Gasto de no consumo\n", fmt_usd(avg_gas_no_con)),
-      paste0("Ahorro\n", fmt_usd(avg_ahorro))
+      paste0("Gto. corriente\n", fmt_usd(avg_gas_corr), " | ", scales::percent(avg_gas_corr / avg_ing_mon_cor, accuracy = 0.1, decimal.mark = ",")),
+      paste0("Otro gto.\n", fmt_usd(avg_gas_no_con), " | ", scales::percent(avg_gas_no_con / avg_ing_mon_cor, accuracy = 0.1, decimal.mark = ",")),
+      paste0("Ahorro\n", fmt_usd(avg_ahorro), " | ", scales::percent(avg_ahorro / avg_ing_mon_cor, accuracy = 0.1, decimal.mark = ","))
     )
   )
 
 right_stage <- right_stage |>
-  mutate(label_text = paste0(.data$label, "\n", fmt_usd(.data$value)))
+  mutate(
+    label_text = case_when(
+      .data$label == "Alimentos y restaurantes" ~ "Alimentos y restaurantes",
+      .data$label == "Vivienda y servicios" ~ "Vivienda y servicios",
+      .data$label == "Recreación y educación" ~ "Recreación y educación",
+      .data$label == "Muebles y hogar" ~ "Muebles",
+      TRUE ~ .data$label
+    ),
+    value_text = paste0(
+      fmt_usd(.data$value), " | ",
+      scales::percent(.data$value / avg_ing_mon_cor, accuracy = 0.1, decimal.mark = ",")
+    ),
+    inline_value = .data$label %in% c(
+      "Vestimenta",
+      "Transporte",
+      "Muebles y hogar",
+      "Salud"
+    ),
+    combined_text = paste0(.data$label_text, "\n", .data$value_text),
+    value_x = case_when(
+      .data$label == "Muebles y hogar" ~ muebles_value_x,
+      .data$inline_value ~ right_value_x,
+      TRUE ~ right_label_x
+    )
+  )
 
 root_label <- paste0("Ingreso\nmonetario\n", fmt_usd(avg_ing_mon_cor))
 
@@ -223,6 +249,18 @@ plot <- ggplot() +
   ) +
   geom_text(
     data = right_stage,
+    aes(
+      x = .data$value_x,
+      y = .data$ymid,
+      label = ifelse(.data$inline_value, .data$value_text, .data$combined_text)
+    ),
+    hjust = 0,
+    size = 4.2,
+    lineheight = 1.02,
+    colour = "#212529"
+  ) +
+  geom_text(
+    data = filter(right_stage, .data$inline_value),
     aes(x = right_label_x, y = .data$ymid, label = .data$label_text),
     hjust = 0,
     size = 4.2,
@@ -241,9 +279,10 @@ plot <- ggplot() +
     axis.text.x = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
+    axis.line.x = element_blank(),
     axis.line.y = element_blank(),
     axis.title.y = element_blank()
   )
 
-save_plot_files(plot, output_dir = output_dir, stem = "grafico1", width = 6.5, height = 6.8, dpi = 300)
+save_plot_files(plot, output_dir = output_dir, stem = "grafico1", width = 6.5, height = 5.2, dpi = 300)
 print(plot)
