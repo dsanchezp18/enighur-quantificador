@@ -36,7 +36,7 @@ normalize_label <- function(x) {
 }
 
 fmt_usd <- function(x) scales::dollar(round(x), prefix = "$", big.mark = ",", accuracy = 1)
-fmt_pct <- function(x) paste0(sprintf("%.1f", 100 * x), "%")
+fmt_pct <- function(x) paste0(gsub("\\.", ",", sprintf("%.1f", 100 * x)), "%")
 with_alpha <- function(colour, alpha = 1) grDevices::adjustcolor(colour, alpha.f = alpha)
 
 read_total_rows <- function(sheet_name) {
@@ -170,6 +170,7 @@ avg_ing_mon_cor <- (ing_mon_cor_exp / ing_cor_tot_exp) * avg_ing_cor_tot
 avg_gas_corr <- (gas_corr_exp / ing_cor_tot_exp) * avg_ing_cor_tot
 avg_gas_no_con <- (gas_no_con_exp / ing_cor_tot_exp) * avg_ing_cor_tot
 avg_ahorro <- avg_ing_mon_cor - avg_gas_corr - avg_gas_no_con
+avg_gasto_total <- avg_gas_corr + avg_gas_no_con
 
 if (avg_ahorro < 0) {
   stop("Savings bucket is negative; selected totals do not close.", call. = FALSE)
@@ -257,6 +258,8 @@ right_xmin <- 2.34
 right_xmax <- 2.64
 mid_label_x <- (mid_xmin + mid_xmax) / 2
 right_label_x <- 2.70
+right_value_x <- 3.30
+muebles_value_x <- 3.44
 root_flow_x0 <- root_xmax
 root_flow_x1 <- mid_xmin
 cat_flow_x0 <- mid_xmax
@@ -302,17 +305,43 @@ node_rects <- dplyr::bind_rows(
 mid_stage <- mid_stage |>
   dplyr::mutate(
     label_text = c(
-      paste0("Gasto corriente\n", fmt_usd(avg_gas_corr)),
-      paste0("Gasto de no consumo\n", fmt_usd(avg_gas_no_con)),
-      paste0("Ahorro\n", fmt_usd(avg_ahorro))
+      paste0("Gto. corriente\n", fmt_usd(avg_gas_corr), " | ", fmt_pct(avg_gas_corr / avg_ing_mon_cor)),
+      paste0("Otro gto.\n", fmt_usd(avg_gas_no_con), " | ", fmt_pct(avg_gas_no_con / avg_ing_mon_cor)),
+      paste0("Ahorro\n", fmt_usd(avg_ahorro), " | ", fmt_pct(avg_ahorro / avg_ing_mon_cor))
     )
   )
 
 right_stage <- right_stage |>
   dplyr::mutate(
-    label_text = paste0(
-      .data$label, "\n",
-      fmt_usd(.data$value)
+    label_text = dplyr::case_when(
+      .data$label == "Alimentos y restaurantes" ~ "Alimentos y restaurantes",
+      .data$label == "Vivienda y servicios" ~ "Vivienda y servicios",
+      .data$label == "Recreación y educación" ~ "Recreación y educación",
+      .data$label == "Muebles y hogar" ~ "Muebles",
+      TRUE ~ .data$label
+    ),
+    value_text = paste0(fmt_usd(.data$value), " | ", fmt_pct(.data$value / avg_ing_mon_cor)),
+    inline_value = .data$label %in% c(
+      "Vestimenta",
+      "Transporte",
+      "Muebles y hogar",
+      "Salud"
+    ),
+    combined_text = paste0(
+      dplyr::case_when(
+        .data$label == "Alimentos y restaurantes" ~ "Alimentos y restaurantes",
+        .data$label == "Vivienda y servicios" ~ "Vivienda y servicios",
+        .data$label == "Recreación y educación" ~ "Recreación y educación",
+        .data$label == "Muebles y hogar" ~ "Muebles",
+        TRUE ~ .data$label
+      ),
+      "\n",
+      fmt_usd(.data$value), " | ", fmt_pct(.data$value / avg_ing_mon_cor)
+    ),
+    value_x = dplyr::case_when(
+      .data$label == "Muebles y hogar" ~ muebles_value_x,
+      .data$inline_value ~ right_value_x,
+      TRUE ~ right_label_x
     )
   )
 
@@ -358,6 +387,18 @@ plot <- ggplot2::ggplot() +
   ) +
   ggplot2::geom_text(
     data = right_stage,
+    ggplot2::aes(
+      x = .data$value_x,
+      y = .data$ymid,
+      label = ifelse(.data$inline_value, .data$value_text, .data$combined_text)
+    ),
+    hjust = 0,
+    size = 4.2,
+    lineheight = 1.02,
+    colour = "#212529"
+  ) +
+  ggplot2::geom_text(
+    data = dplyr::filter(right_stage, .data$inline_value),
     ggplot2::aes(x = right_label_x, y = .data$ymid, label = .data$label_text),
     hjust = 0,
     size = 4.2,
@@ -369,13 +410,17 @@ plot <- ggplot2::ggplot() +
   ggplot2::scale_alpha_identity() +
   ggplot2::scale_x_continuous(expand = c(0, 0)) +
   ggplot2::scale_y_continuous(expand = c(0, 0), labels = scales::label_dollar(prefix = "$", big.mark = ",")) +
-  ggplot2::labs(x = NULL, y = NULL) +
+  ggplot2::labs(
+    x = NULL,
+    y = NULL
+  ) +
   theme_quantificador() +
   ggplot2::theme(
     panel.grid = ggplot2::element_blank(),
     axis.text.x = ggplot2::element_blank(),
     axis.text.y = ggplot2::element_blank(),
     axis.ticks = ggplot2::element_blank(),
+    axis.line.x = ggplot2::element_blank(),
     axis.line.y = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_blank(),
     plot.margin = ggplot2::margin(8, 60, 8, 12)
@@ -385,7 +430,7 @@ save_figure(
   "sankey_ingresos_gastos_2025.png",
   plot = plot,
   width = 6.5,
-  height = 6.8,
+  height = 5.2,
   dpi = 300
 )
 
