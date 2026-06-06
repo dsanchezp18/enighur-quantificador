@@ -77,6 +77,13 @@ add_logo <- function(plot,
 save_figure <- function(filename, plot = last_plot(), width = 10, height = 6, dpi = 300) {
   path <- file.path("output", "figures", filename)
   dir.create(dirname(path), showWarnings = FALSE, recursive = TRUE)
-  ggsave(path, plot = plot, width = width, height = height, dpi = dpi)
+  ggsave(path, plot = plot, width = width, height = height, dpi = dpi, bg = "white")
+
+  svg_path <- file.path(
+    dirname(path),
+    paste0(tools::file_path_sans_ext(basename(path)), ".svg")
+  )
+  ggsave(svg_path, plot = plot, width = width, height = height, device = grDevices::svg, bg = "white")
+
   invisible(path)
 }

@@ -33,6 +33,20 @@ header-includes:
 
 ```{r}
 knitr::opts_chunk$set(out.width = "100%", fig.align = "center")
+
+include_preferred_graphic <- function(paths) {
+  candidate <- paths[file.exists(paths)][1]
+
+  if (is.na(candidate)) {
+    stop(
+      "No graphic found. Checked:\n- ",
+      paste(paths, collapse = "\n- "),
+      call. = FALSE
+    )
+  }
+
+  knitr::include_graphics(candidate)
+}
 ```
 
 *En esta entrega del Quantificador, Daniel Sánchez analiza los datos recientes de la Encuesta Nacional de Ingresos y Gastos de los Hogares Urbanos y Rurales (ENIGHUR), realizada por el INEC en 2024-2025. Se revisan patrones de ingreso y gasto de los hogares, con información que no se recolectaba desde 2011-2012*.
@@ -51,7 +65,7 @@ En su extremo detalle, la ENIGHUR también nos permite entender tópicos especia
 
 La encuesta nos informa que, durante 2025^[El periodo de recolección de datos de la encuesta fue de diciembre de 2024 a noviembre de 2025.], el promedio del ingreso monetario de los hogares fue de $889^[INEC reporta un ingreso más alto con la misma encuesta, puesto que se consideran ingresos no monetarios mediante estimaciones del valor de dichos ingresos en especie.]. Este promedio es un poco más optimista que el de la ENEMDU, dependiendo de cómo se lo calcule^[Ya que la ENIGHUR es una encuesta optimizada tanto para medir el ingreso como el gasto, el valor de $889 es la mejor estimación disponible para este periodo.]. El hogar ecuatoriano promedio tuvo 3.31 personas en 2025.
 
-El gráfico 1 muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo"^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias a otros hogares o instituciones. Además, se determina que: 
+El gráfico 1 muestra cómo el ingreso de los hogares se distribuye en diferentes tipos de gasto para el hogar promedio. La gran mayoría de este ingreso se dedica a gasto corriente, con un promedio de $642 (72.2% del total). El gasto corriente es gasto de "corto plazo"^[Formalmente, gasto en bienes y servicios dedicado a satisfacer necesidades y deseos cotidianos.]. Un pequeño porcentaje se dedica a gasto de no consumo, es decir, impuestos, pensiones alimenticias, matriculaciones y transferencias a otros hogares o instituciones. Además, determino que: 
 
 - El componente que más les pesa a las familias es el gasto en alimentos y restaurantes: $202 en promedio, lo que representa el 22.8% del ingreso y el 32% del gasto de consumo total. De acuerdo con la teoría económica y la investigación empírica, este alto porcentaje es muy común en países en desarrollo [@worldbankconsumptionmarket]. Como comparación, los hogares canadienses dedicaron el 15.7% de sus gastos a comida en 2023 [@statcan2025shs].
 
@@ -65,11 +79,11 @@ El gráfico 1 muestra cómo el ingreso de los hogares se distribuye en diferente
 
 ```{r, fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: El gráfico muestra cómo se reparte el ingreso monetario mensual del hogar promedio. El ahorro se calcula como la diferencia entre el ingreso monetario y los gastos del hogar."}
 sankey_path <- file.path("..", "output", "figures", "sankey_ingresos_gastos_interactivo.html")
-sankey_png_candidates <- c(
-  file.path("..", "output", "figures", "sankey_ingresos_gastos_2025.png"),
-  file.path("..", "output", "figures", "sankey_ingresos_gastos.png")
+sankey_static_candidates <- c(
+  file.path("..", "output", "figures", "sankey_ingresos_gastos_2025.svg"),
+  file.path("..", "output", "figures", "sankey_ingresos_gastos_2025.png")
 )
-sankey_png_path <- sankey_png_candidates[file.exists(sankey_png_candidates)][1]
+sankey_static_path <- sankey_static_candidates[file.exists(sankey_static_candidates)][1]
 
 if (knitr::is_html_output() && file.exists(sankey_path)) {
   sankey_html <- paste(readLines(sankey_path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
@@ -78,8 +92,8 @@ if (knitr::is_html_output() && file.exists(sankey_path)) {
     style = "display:block;width:100%;max-width:100%;height:900px;border:none;margin:1.25rem auto;",
     loading = "lazy"
   )
-} else if (!is.na(sankey_png_path)) {
-  knitr::include_graphics(sankey_png_path)
+} else if (!is.na(sankey_static_path)) {
+  knitr::include_graphics(sankey_static_path)
 } else {
   knitr::asis_output(
     '<p><em>El gráfico Sankey no está disponible todavía. Genere primero los outputs en <code>output/figures/</code>.</em></p>'
@@ -89,24 +103,26 @@ if (knitr::is_html_output() && file.exists(sankey_path)) {
 
 # La mayoría de hogares en Ecuador ganan menos de $1,000 mensuales
 
-La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor y el otro 50% gana más. Como el promedio nacional es bastante más alto, de $889, esto ya anticipa una distribución sesgada hacia arriba: hay relativamente pocos hogares con ingresos altos, pero empujan el promedio hacia arriba. El gráfico 2 muestra esa distribución solo para 2025.
+La mediana del ingreso según ENIGHUR fue de $620, lo que quiere decir que el 50% de los hogares gana hasta ese valor y el otro 50% gana más. Como el promedio nacional es mucho más alto, de $889, esto ya anticipa una distribución sesgada hacia arriba: hay relativamente pocos hogares con ingresos altos, pero empujan el promedio hacia arriba. El gráfico 2 muestra esa distribución solo para 2025.
 
 *Gráfico 2: Distribución del ingreso monetario mensual de los hogares en 2025*
 
 ```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: Las barras muestran el porcentaje de hogares en cada tramo de ingreso. La línea punteada marca la mediana. El gráfico llega hasta el percentil 95 del ingreso monetario del hogar en 2025."}
-dist_path <- file.path("..", "output", "figures", "distribucion_ingreso_2025.png")
-knitr::include_graphics(dist_path)
+include_preferred_graphic(c(
+  file.path("..", "output", "figures", "distribucion_ingreso_2025.svg"),
+  file.path("..", "output", "figures", "distribucion_ingreso_2025.png")
+))
 ```
 
 En general, encuentro que:
 
 - El 71.3% de los hogares gana menos de $1,000 al mes. Solo el 28.7% supera ese umbral, que además marca de forma aproximada la entrada al quintil más alto de ingresos.
 
-- También se habló mucho en semanas pasadas de cuántos hogares ganan $1,500 o más. La ENIGHUR confirma, de manera bastante clara, lo que también sugiere la ENEMDU: solo 14.7% de los hogares llega a ese nivel.
+- También he hablado en semanas pasadas de cuántos hogares ganan $1,500 o más. La ENIGHUR confirma, con claridad, lo que también sugiere la ENEMDU: solo 14.7% de los hogares llega a ese nivel.
 
 - En el extremo más alto de la distribución, el 1% de hogares gana $4,465 mensuales o más. Ese grupo muy pequeño concentra 7.1% de todo el ingreso monetario de los hogares del país, una señal bastante nítida de la desigualdad que existe en Ecuador.
 
-- Dicho de otra forma: la mayor parte del país está concentrada en los primeros tramos de la distribución, mientras que la cola derecha es larga y delgada. Hay pocos hogares con ingresos muy altos, pero son suficientes para alejar bastante al promedio de la mediana.
+- Dicho de otra forma: la mayor parte del país está concentrada en los primeros tramos de la distribución, mientras que la cola derecha es larga y delgada. Hay pocos hogares con ingresos muy altos, pero son suficientes para alejar marcadamente al promedio de la mediana.
 
 # Los productos esenciales pesan más en los hogares más pobres
 
@@ -115,8 +131,10 @@ A propósito de las diferencias entre los hogares más ricos y pobres, es posibl
 *Gráfico 3: Gasto monetario total mensual del hogar por quintil de ingreso*
 
 ```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: Q1 corresponde al quintil de menores ingresos y Q5 al de mayores ingresos. La línea central marca la mediana. La caja va del percentil 25 al 75 y los bigotes muestran los percentiles 10 y 90."}
-dist_quintiles_path <- file.path("..", "output", "figures", "gasto_total_por_quintil_ingreso_2025.png")
-knitr::include_graphics(dist_quintiles_path)
+include_preferred_graphic(c(
+  file.path("..", "output", "figures", "gasto_total_por_quintil_ingreso_2025.svg"),
+  file.path("..", "output", "figures", "gasto_total_por_quintil_ingreso_2025.png")
+))
 ```
 
 - Entre los hogares más pobres, la canasta está mucho más comprimida: la mediana mensual en alimentos y restaurantes es de apenas $71, en vivienda y servicios de $15, en transporte de $6 y en salud de $6. Aunque los montos absolutos son bajos, esto también implica una canasta mucho más concentrada en bienes esenciales.
@@ -142,8 +160,10 @@ La gasolina está mucho más concentrada en los hogares de mayores ingresos que 
 *Gráfico 4: Gasto mensual promedio en gasolina del hogar por quintil de ingreso*
 
 ```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: Gasolina incluye eco país, extra y súper. Las etiquetas muestran el gasto promedio mensual y su peso dentro del gasto monetario del hogar."}
-gasolina_quintiles_path <- file.path("..", "output", "figures", "gasolina_promedio_por_quintil_2025.png")
-knitr::include_graphics(gasolina_quintiles_path)
+include_preferred_graphic(c(
+  file.path("..", "output", "figures", "gasolina_promedio_por_quintil_2025.svg"),
+  file.path("..", "output", "figures", "gasolina_promedio_por_quintil_2025.png")
+))
 ```
 
 - Incluso entre quienes sí gastan en gasolina, las diferencias siguen siendo grandes:
@@ -157,7 +177,7 @@ Dentro de la gran categoría de bebidas alcohólicas, tabaco y estupefacientes, 
 
 - Solo alrededor de 12% de los hogares registra algún gasto en esta categoría en un mes típico.
 
-- Entre quienes sí gastan, el desembolso medio ronda $27.5 y la mediana $15. También hay un perfil social bastante claro: la proporción de hogares que gasta en este rubro sube de 5.8% en el quintil más pobre a 16.5% en el quintil más rico. 
+- Entre quienes sí gastan, el desembolso medio ronda $27.5 y la mediana $15. También hay un perfil social muy claro: la proporción de hogares que gasta en este rubro sube de 5.8% en el quintil más pobre a 16.5% en el quintil más rico. 
 
 - Además, cuando los hogares urbanos gastan en esta categoría, el monto medio es mayor que en los rurales: $29.4 frente a $21.7.
 
@@ -169,15 +189,17 @@ Es algo difícil de creer que tan pocos hogares registren este gasto. Existe la 
 
 ¿Qué tan bien representan esos totales nacionales a cada región? Los datos muestran que no tanto. Las familias de cada provincia gastan de forma distinta, tanto en cantidad como en composición. Abajo, algunos detalles:
 
-- Si se compara la mediana del gasto corriente total del hogar entre provincias, Galápagos aparece claramente en primer lugar, llegando a $1,632. Esto es más del doble de la mediana nacional.
+- Si comparo la mediana del gasto corriente total del hogar entre provincias, Galápagos aparece claramente en primer lugar, llegando a $1,632. Esto es más del doble de la mediana nacional.
 
-- Después vienen Azuay con $873 y Pichincha con $860, bastante por encima del promedio del país. En otros análisis del INEC, Cuenca siempre está entre los lugares más costosos. Además, se conoce como un destino popular para _expats_ de EE. UU. y Canadá. Es posible que este tipo de hogares eleve la mediana del gasto.
+- Después vienen Azuay con $873 y Pichincha con $860, claramente por encima del promedio del país. En otros análisis del INEC, Cuenca siempre está entre los lugares más costosos. Además, Cuenca es conocida como un destino popular para _expats_ de EE. UU. y Canadá. Es posible que este tipo de hogares eleve la mediana del gasto.
 
 *Gráfico 5: Mediana del gasto corriente total del hogar en las cinco provincias con valores más altos*
 
 ```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: El gráfico resalta el caso de Galápagos frente al resto del país."}
-gasto_provincia_path <- file.path("..", "output", "figures", "gasto_total_mediano_provincia_2025.png")
-knitr::include_graphics(gasto_provincia_path)
+include_preferred_graphic(c(
+  file.path("..", "output", "figures", "gasto_total_mediano_provincia_2025.svg"),
+  file.path("..", "output", "figures", "gasto_total_mediano_provincia_2025.png")
+))
 ```
 
 - En Galápagos, la mediana de alimentos y restaurantes llega a $395, frente a $173 a nivel nacional. Es conocido que los alimentos son costosos en la región insular.
@@ -190,20 +212,22 @@ La distancia entre Galápagos y el resto sirve para recordar que el costo de vid
 
 # La Costa come cebolla, tomate y verde; la Sierra come pan
 
-Las bases de datos primarias de la ENIGHUR permiten observar productos concretos en las compras del hogar. La medida que uso es simple: el porcentaje de hogares que reportó al menos una compra del producto en la semana de referencia. La comparación por región deja ver una canasta nacional reconocible, pero también contrastes bastante marcados entre Costa, Sierra y Amazonía.
+Las bases de datos primarias de la ENIGHUR permiten observar productos concretos en las compras del hogar. La medida que uso es simple: el porcentaje de hogares que reportó al menos una compra del producto en la semana de referencia. La comparación por región deja ver una canasta nacional reconocible, pero también contrastes muy marcados entre Costa, Sierra y Amazonía.
 
 *Gráfico 6: Productos que aparecen con más frecuencia en la compra del hogar, a nivel nacional y por región*
 
 ```{r, results='asis', fig.cap="Fuente: ENIGHUR 2024-2025, INEC. Nota: La presencia se mide como el porcentaje de hogares que registró al menos una compra del producto."}
-food_products_path <- file.path("..", "output", "figures", "productos_alimentos_mas_presentes_region_2025.png")
-knitr::include_graphics(food_products_path)
+include_preferred_graphic(c(
+  file.path("..", "output", "figures", "productos_alimentos_mas_presentes_region_2025.svg"),
+  file.path("..", "output", "figures", "productos_alimentos_mas_presentes_region_2025.png")
+))
 ```
 
 - A escala nacional, la canasta de alimentos más común tiene tomate riñón, presente en 64.9% de hogares, pan común blanco con 64.4% y cebolla paiteña con 60.2%. Luego vienen huevos con 55.5% y leche entera en funda con 52.1%.
 
 - Hay diferencias regionales notables. En la Costa dominan tomate riñón y cebolla paiteña, ambos presentes en poco más de 7 de cada 10 hogares. Después aparecen papa chola, pan común blanco y pimiento verde, todos alrededor de 59%. También resalta el plátano verde: al sumar sus dos variedades principales, aparece en 45.1% de hogares costeños.
 
-- En la Sierra, el producto claramente dominante es el pan común blanco: aparece en 71.7% de hogares, bastante por encima del tomate riñón con 57.8% y de los huevos con 53.5%. También destacan leche entera en funda con 51.0% y cebolla paiteña con 48.9%.
+- En la Sierra, el producto claramente dominante es el pan común blanco: aparece en 71.7% de hogares, claramente por encima del tomate riñón con 57.8% y de los huevos con 53.5%. También destacan leche entera en funda con 51.0% y cebolla paiteña con 48.9%.
 
 - La Amazonía u Oriente combina rasgos de ambas regiones. Tomate riñón llega a 58.5%, cebolla paiteña a 53.8% y pan común blanco a 50.0%, pero el plátano verde sube hasta 46.4%, muy cerca de los huevos, que alcanzan 47.1%.
 
@@ -213,7 +237,7 @@ Los datos nos demuestran (o verifican) que en nuestro país las familias consume
 
 La ENIGHUR 2024-2025 revela varios detalles sobre la realidad ecuatoriana. El hogar ecuatoriano típico sigue siendo frágil: el ingreso mediano del hogar es de apenas $620 y, al mismo tiempo, una parte grande del presupuesto todavía se concentra en bienes básicos. Eso significa que, para una gran parte del país, la subida de precios de bienes esenciales puede ser un fuerte golpe a su bienestar económico.
 
-Adicionalmente, si bien existe un promedio y una mediana nacional, el estilo de vida varía mucho en función de las circunstancias, la región e incluso la provincia. Los hogares pobres destinan mucho más de su gasto a bienes esenciales, mientras que los hogares de mayores ingresos tienen una canasta bastante más diversificada. La Costa consume una canasta de hortalizas y verde; la Sierra, una canasta donde el pan pesa más, etc. 
+Adicionalmente, si bien existe un promedio y una mediana nacional, el estilo de vida varía mucho en función de las circunstancias, la región e incluso la provincia. Los hogares pobres destinan mucho más de su gasto a bienes esenciales, mientras que los hogares de mayores ingresos tienen una canasta mucho más diversificada. La Costa consume una canasta de hortalizas y verde; la Sierra, una canasta donde el pan pesa más, etc. 
 
 La ENIGHUR es una de las encuestas más exhaustivas que produce el INEC. Nos permite visualizar las realidades de diferentes hogares, realidades que, aunque están muy presentes en la mente colectiva de los ecuatorianos, hoy se confirman mediante evidencia empírica. Desafortunadamente, tuvieron que pasar 12 años para lograrlo. Sin una encuesta de ingresos y gastos actualizada, el país termina midiendo inflación, bienestar y costo de vida con información desactualizada. Con todo esto, mi punto es que la estadística socioeconómica es clave para absolutamente todos los sectores del país. Manejarla bien es una responsabilidad enorme que no deberíamos descuidar.
 
