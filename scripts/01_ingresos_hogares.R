@@ -546,10 +546,10 @@ province_spending_plot <- ggplot(
   annotate(
     "text",
     x = national_median_spending,
-    y = 0.55,
+    y = 3.5,
     label = paste0("Mediana nacional: $", formatC(round(national_median_spending), format = "d", big.mark = ",")),
     hjust = -0.02,
-    vjust = 1,
+    vjust = 0.5,
     size = 4.2,
     colour = "#495057"
   ) +

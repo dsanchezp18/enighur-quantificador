@@ -171,17 +171,17 @@ include_preferred_graphic(c(
 
 - Esto no significa necesariamente que los hogares pobres no usen transporte, sino que la gasolina para vehículo particular está mucho menos extendida en su canasta.
 
-# Portovelo (El Oro) es la ciudad donde más se gasta en bebidas alcohólicas, tabaco y estupefacientes
+# Galápagos es la provincia donde más se gasta en bebidas alcohólicas, tabaco y estupefacientes
 
 Dentro de la gran categoría de bebidas alcohólicas, tabaco y estupefacientes, la mediana del gasto es cero en todos los quintiles de ingreso. Es decir, para la mayoría de hogares este rubro no aparece como un gasto mensual típico. Aun así, el promedio sí muestra diferencias: en el quintil más pobre el gasto medio bordea apenas $0.9 al mes, mientras que en el quintil más rico sube a $5.7. Sobre este gasto, también encuentro que:
 
 - Solo alrededor de 12% de los hogares registra algún gasto en esta categoría en un mes típico.
 
-- Entre quienes sí gastan, el desembolso medio ronda $27.5 y la mediana $15. También hay un perfil social muy claro: la proporción de hogares que gasta en este rubro sube de 5.8% en el quintil más pobre a 16.5% en el quintil más rico. 
+- Entre quienes sí gastan, el desembolso medio ronda $27.5 y la mediana $15. También hay un perfil social muy claro: la proporción de hogares que gasta en este rubro sube de 5.8% en el quintil más pobre a 16.5% en el quintil más rico.
 
 - Además, cuando los hogares urbanos gastan en esta categoría, el monto medio es mayor que en los rurales: $29.4 frente a $21.7.
 
-- A escala territorial, Portovelo, en El Oro, aparece como la ciudad con el gasto promedio más alto en esta categoría, con $38.8 mensuales por hogar. Le siguen San Juan Bosco y Santiago de Méndez, ambas en Morona Santiago. Incluso en esos casos, sin embargo, el rubro sigue siendo minoritario dentro del presupuesto total: en Portovelo equivale a cerca de 7.3% del gasto monetario del hogar.
+- A escala provincial, Galápagos aparece como la provincia con la mediana de gasto más alta entre los hogares que sí destinan algo a esta categoría, con $30 mensuales. Le siguen Guayas, Los Ríos y Santa Elena, con una mediana de $21 entre sus hogares compradores. En todos los casos, el rubro sigue siendo minoritario dentro del presupuesto total del hogar.
 
 Es algo difícil de creer que tan pocos hogares registren este gasto. Existe la posibilidad de que el consumo de alcohol se encuentre en otros componentes, como restaurantes, y que además exista una connotación negativa sobre este consumo que dificulte una buena recolección de datos. Una investigación profunda sobre este fenómeno está fuera del alcance de mi artículo, pero vale la pena considerarla a futuro.
 

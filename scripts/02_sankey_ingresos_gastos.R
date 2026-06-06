@@ -317,7 +317,7 @@ right_stage <- right_stage |>
   )
 
 root_label <- paste0(
-  "Ingreso monetario\n",
+  "Ingreso\nmonetario\n",
   fmt_usd(avg_ing_mon_cor)
 )
 
