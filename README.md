@@ -1,4 +1,4 @@
-# enighur-quantificador
+# ENIGHUR 2024-2025: ingresos y gastos de los hogares en Ecuador
 
 Análisis en R de la ENIGHUR 2024-2025, con comparaciones puntuales frente a la ENIGHUR 2011-2012 y una salida editorial en Quarto para *El Quantificador*.
 
