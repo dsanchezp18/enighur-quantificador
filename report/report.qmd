@@ -224,13 +224,13 @@ include_preferred_graphic(c(
 ))
 ```
 
-- A escala nacional, la canasta de alimentos más común tiene tomate riñón, presente en 64,9% de hogares, pan común blanco con 64,4% y cebolla paiteña con 60,2%. Luego vienen huevos con 55,5% y leche entera en funda con 52,1%.
+- A escala nacional, la canasta de alimentos más común tiene tomate riñón, presente en 64,9% de hogares, pan común blanco con 64,4% y cebolla paiteña con 62,8%. Luego vienen huevos con 55,5% y leche entera en funda con 52,1%.
 
 - Hay diferencias regionales notables. En la Costa dominan tomate riñón y cebolla paiteña, ambos presentes en poco más de 7 de cada 10 hogares. Después aparecen papa chola, pan común blanco y pimiento verde, todos alrededor de 59%. También resalta el plátano verde: al sumar sus dos variedades principales, aparece en 45,1% de hogares costeños.
 
-- En la Sierra, el producto claramente dominante es el pan común blanco: aparece en 71,7% de hogares, claramente por encima del tomate riñón con 57,8% y de los huevos con 53,5%. También destacan leche entera en funda con 51,0% y cebolla paiteña con 48,9%.
+- En la Sierra, el producto claramente dominante es el pan común blanco: aparece en 71,7% de hogares, claramente por encima del tomate riñón con 57,8% y de los huevos con 53,5%. También destacan leche entera en funda con 51,0% y cebolla paiteña con 52,0%.
 
-- La Amazonía u Oriente combina rasgos de ambas regiones. Tomate riñón llega a 58,5%, cebolla paiteña a 53,8% y pan común blanco a 50,0%, pero el plátano verde sube hasta 46,4%, muy cerca de los huevos, que alcanzan 47,1%.
+- La Amazonía u Oriente combina rasgos de ambas regiones. Tomate riñón llega a 58,5%, cebolla paiteña a 56,5% y pan común blanco a 50,0%, pero el plátano verde sube hasta 46,4%, muy cerca de los huevos, que alcanzan 47,1%.
 
 Los datos nos demuestran (o verifican) que en nuestro país las familias consumen ciertas cosas de manera uniforme. Sin embargo, la composición regional varía: la Costa come cebolla, tomate y verde; la Sierra come pan; y la Amazonía se parece más a una mezcla de ambos patrones, con un peso especialmente alto del plátano verde.
 
